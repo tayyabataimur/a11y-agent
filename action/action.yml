@@ -1,0 +1,108 @@
+name: A11yAgent
+description: Run accessibility audits on URLs or repos and post results to PRs
+author: tayyabataimur
+branding:
+  icon: eye
+  color: purple
+
+inputs:
+  url:
+    description: URL to audit (omit to audit repo)
+    required: false
+  repo-path:
+    description: Repo path to audit (defaults to workspace)
+    required: false
+    default: "."
+  max-files:
+    description: Max files to scan in repo mode
+    required: false
+    default: "50"
+  fail-under:
+    description: Fail job if score below this threshold (0-100)
+    required: false
+    default: "0"
+  comment-on-pr:
+    description: Post results as PR comment
+    required: false
+    default: "true"
+  github-token:
+    description: GitHub token for PR comments
+    required: false
+    default: ${{ github.token }}
+
+outputs:
+  score:
+    description: Accessibility score (0-100)
+    value: ${{ steps.run.outputs.score }}
+  grade:
+    description: Letter grade (A-F)
+    value: ${{ steps.run.outputs.grade }}
+  report-path:
+    description: Path to generated report
+    value: ${{ steps.run.outputs.report-path }}
+
+runs:
+  using: composite
+  steps:
+    - name: Setup Node
+      uses: actions/setup-node@v4
+      with:
+        node-version: 20
+
+    - name: Install A11yAgent
+      shell: bash
+      run: npm install -g a11y-agent@latest
+
+    - name: Install Playwright Chromium
+      shell: bash
+      run: npx playwright install chromium --with-deps
+
+    - name: Run audit
+      id: run
+      shell: bash
+      env:
+        INPUT_URL: ${{ inputs.url }}
+        INPUT_REPO_PATH: ${{ inputs.repo-path }}
+        INPUT_MAX_FILES: ${{ inputs.max-files }}
+        INPUT_FAIL_UNDER: ${{ inputs.fail-under }}
+      run: |
+        set -e
+        REPORT_PATH="${{ runner.temp }}/a11y-report.json"
+        MD_PATH="${{ runner.temp }}/a11y-report.md"
+        if [ -n "$INPUT_URL" ]; then
+          a11y-agent audit "$INPUT_URL" --output "$REPORT_PATH"
+          a11y-agent audit "$INPUT_URL" --markdown --output "$MD_PATH"
+        else
+          a11y-agent audit:repo "$INPUT_REPO_PATH" --max-files "$INPUT_MAX_FILES" --output "$REPORT_PATH"
+          a11y-agent audit:repo "$INPUT_REPO_PATH" --max-files "$INPUT_MAX_FILES" --markdown --output "$MD_PATH"
+        fi
+        SCORE=$(node -e "const r=require('$REPORT_PATH');console.log(r.score ?? r.summary?.score ?? 0)")
+        GRADE=$(node -e "const r=require('$REPORT_PATH');console.log(r.grade ?? r.summary?.grade ?? 'F')")
+        echo "score=$SCORE" >> "$GITHUB_OUTPUT"
+        echo "grade=$GRADE" >> "$GITHUB_OUTPUT"
+        echo "report-path=$REPORT_PATH" >> "$GITHUB_OUTPUT"
+        echo "md-path=$MD_PATH" >> "$GITHUB_OUTPUT"
+        if [ "$INPUT_FAIL_UNDER" -gt 0 ] && [ "${SCORE%.*}" -lt "$INPUT_FAIL_UNDER" ]; then
+          echo "::error::Accessibility score $SCORE below threshold $INPUT_FAIL_UNDER"
+          exit 1
+        fi
+
+    - name: Comment on PR
+      if: ${{ inputs.comment-on-pr == 'true' && github.event_name == 'pull_request' }}
+      uses: actions/github-script@v7
+      env:
+        MD_PATH: ${{ steps.run.outputs.md-path }}
+        SCORE: ${{ steps.run.outputs.score }}
+        GRADE: ${{ steps.run.outputs.grade }}
+      with:
+        github-token: ${{ inputs.github-token }}
+        script: |
+          const fs = require('fs');
+          const md = fs.readFileSync(process.env.MD_PATH, 'utf8');
+          const body = `## A11yAgent Report\n\n**Score:** ${process.env.SCORE} | **Grade:** ${process.env.GRADE}\n\n<details><summary>Full report</summary>\n\n${md}\n\n</details>`;
+          await github.rest.issues.createComment({
+            owner: context.repo.owner,
+            repo: context.repo.repo,
+            issue_number: context.issue.number,
+            body,
+          });

@@ -1,0 +1,52 @@
+{
+  "name": "a11y-agent",
+  "version": "0.1.0",
+  "description": "Agentic MCP server that audits and auto-patches accessibility violations in React/Next.js components",
+  "type": "module",
+  "main": "dist/index.js",
+  "bin": {
+    "a11y-agent": "dist/index.js"
+  },
+  "scripts": {
+    "build": "tsc",
+    "dev": "tsx watch src/index.ts",
+    "start": "node dist/index.js",
+    "typecheck": "tsc --noEmit",
+    "prepublishOnly": "npm run build",
+    "postinstall": "playwright install chromium --with-deps 2>/dev/null || true"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE"
+  ],
+  "keywords": [
+    "accessibility",
+    "a11y",
+    "wcag",
+    "mcp",
+    "model-context-protocol",
+    "axe-core",
+    "react",
+    "nextjs",
+    "agentic"
+  ],
+  "author": "Tayyaba Taimur",
+  "license": "MIT",
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0",
+    "axe-core": "^4.10.0",
+    "playwright": "^1.48.0",
+    "ts-morph": "^23.0.0",
+    "zod": "^3.23.0",
+    "zod-to-json-schema": "^3.25.2"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0",
+    "tsx": "^4.19.0",
+    "typescript": "^5.6.0"
+  },
+  "engines": {
+    "node": ">=18"
+  }
+}

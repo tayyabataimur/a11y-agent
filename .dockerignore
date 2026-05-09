@@ -1,0 +1,8 @@
+node_modules
+src
+*.ts
+!dist
+.git
+.env*
+skill
+evals

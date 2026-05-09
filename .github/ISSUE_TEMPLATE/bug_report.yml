@@ -1,0 +1,65 @@
+name: Bug report
+description: Report a defect in A11yAgent
+labels: [bug]
+body:
+  - type: input
+    id: version
+    attributes:
+      label: A11yAgent version
+      description: Output of `npx a11y-agent --version`
+      placeholder: 0.1.0
+    validations:
+      required: true
+
+  - type: input
+    id: node
+    attributes:
+      label: Node version
+      placeholder: v20.10.0
+    validations:
+      required: true
+
+  - type: dropdown
+    id: surface
+    attributes:
+      label: Surface
+      multiple: false
+      options:
+        - CLI
+        - MCP (stdio)
+        - MCP (HTTP)
+        - GitHub Action
+        - Demo site (a11y.tayyaba.dev)
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: repro
+    attributes:
+      label: Reproduction
+      description: Minimal steps. Include the exact command or MCP call, plus a public URL or file content if relevant.
+      render: shell
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+    validations:
+      required: true
+
+  - type: textarea
+    id: actual
+    attributes:
+      label: Actual behavior
+      description: Include error messages and stack traces.
+      render: shell
+    validations:
+      required: true
+
+  - type: textarea
+    id: extra
+    attributes:
+      label: Anything else?

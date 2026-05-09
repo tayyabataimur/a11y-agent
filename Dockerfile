@@ -1,6 +1,14 @@
-FROM node:20-slim
+FROM node:20-slim AS builder
 
-# Install Chromium dependencies
+WORKDIR /app
+COPY package*.json tsconfig.json ./
+RUN npm ci --ignore-scripts
+COPY src/ ./src/
+RUN npm run build
+
+FROM node:20-slim AS runtime
+
+# Chromium + system deps for Playwright
 RUN apt-get update && apt-get install -y \
   chromium \
   fonts-liberation \
@@ -24,19 +32,21 @@ RUN apt-get update && apt-get install -y \
   --no-install-recommends \
   && rm -rf /var/lib/apt/lists/*
 
-# Tell Playwright to use the system Chromium
 ENV PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1
 ENV PLAYWRIGHT_CHROMIUM_EXECUTABLE_PATH=/usr/bin/chromium
+ENV NODE_ENV=production
 
 WORKDIR /app
 
 COPY package*.json ./
-RUN npm ci --ignore-scripts
+RUN npm ci --omit=dev --ignore-scripts
 
-COPY dist/ ./dist/
+COPY --from=builder /app/dist/ ./dist/
 
-# Default HTTP port — override with A11Y_AGENT_PORT env var
 ENV A11Y_AGENT_PORT=3000
 EXPOSE 3000
+
+HEALTHCHECK --interval=30s --timeout=5s --start-period=15s \
+  CMD node -e "fetch('http://localhost:'+(process.env.A11Y_AGENT_PORT||3000)+'/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
 
 CMD ["node", "dist/index.js"]

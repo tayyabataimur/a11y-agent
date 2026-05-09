@@ -1,0 +1,231 @@
+openapi: 3.1.0
+info:
+  title: A11yAgent HTTP API
+  version: 0.1.0
+  description: |
+    Accessibility evaluation, crawl, repo audit, remediation, and verification.
+    Powered by axe-core and Playwright.
+  contact:
+    name: A11yAgent
+    url: https://github.com/tayyabataimur/a11y-agent
+  license:
+    name: MIT
+    url: https://opensource.org/licenses/MIT
+
+servers:
+  - url: https://a11y-api.fly.dev
+    description: Hosted production instance
+  - url: http://localhost:3000
+    description: Local development
+
+paths:
+  /health:
+    get:
+      operationId: healthCheck
+      summary: Service health
+      responses:
+        "200":
+          description: OK
+          content:
+            application/json:
+              schema:
+                type: object
+                properties:
+                  status: { type: string, example: ok }
+
+  /api/evaluate:
+    post:
+      operationId: evaluateUrl
+      summary: Evaluate accessibility of a live URL
+      description: Returns score (0-100), grade (A-F), estimated WCAG level, ranked issues, and a plain-language AI summary.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/EvaluateRequest"
+      responses:
+        "200":
+          description: Evaluation result
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/EvaluationResult"
+        "400":
+          $ref: "#/components/responses/BadRequest"
+
+  /api/crawl:
+    post:
+      operationId: crawlSite
+      summary: Crawl a site and aggregate accessibility issues
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/CrawlRequest"
+      responses:
+        "200":
+          description: Crawl result
+          content:
+            application/json:
+              schema:
+                type: object
+        "400":
+          $ref: "#/components/responses/BadRequest"
+
+  /api/repo-audit:
+    post:
+      operationId: auditRepo
+      summary: Audit a code repository for accessibility issues
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RepoAuditRequest"
+      responses:
+        "200":
+          description: Repo audit result
+          content:
+            application/json:
+              schema:
+                type: object
+        "400":
+          $ref: "#/components/responses/BadRequest"
+
+  /api/remediate:
+    post:
+      operationId: remediate
+      summary: Generate remediation report, diff, or apply safe fixes
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              $ref: "#/components/schemas/RemediateRequest"
+      responses:
+        "200":
+          description: Remediation result
+          content:
+            application/json:
+              schema:
+                type: object
+        "400":
+          $ref: "#/components/responses/BadRequest"
+
+  /api/verify:
+    post:
+      operationId: verifyRemediation
+      summary: Re-audit after fixes to verify improvement
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema:
+              type: object
+              required: [source_path, audit_url]
+              properties:
+                source_path: { type: string }
+                audit_url: { type: string, format: uri }
+      responses:
+        "200":
+          description: Verification result
+          content:
+            application/json:
+              schema:
+                type: object
+        "400":
+          $ref: "#/components/responses/BadRequest"
+
+components:
+  schemas:
+    EvaluateRequest:
+      type: object
+      required: [url]
+      properties:
+        url:
+          type: string
+          format: uri
+          description: Public or accessible URL to audit
+          example: https://example.com
+        wait_for:
+          type: string
+          description: CSS selector or 'networkidle' to wait for before audit
+        viewport:
+          type: object
+          properties:
+            width: { type: integer, default: 1280 }
+            height: { type: integer, default: 720 }
+
+    CrawlRequest:
+      type: object
+      required: [url]
+      properties:
+        url: { type: string, format: uri }
+        max_pages: { type: integer, default: 10, maximum: 50 }
+        same_origin: { type: boolean, default: true }
+
+    RepoAuditRequest:
+      type: object
+      required: [path]
+      properties:
+        path: { type: string, description: Filesystem path to repo (server-side) }
+        max_files: { type: integer, default: 50 }
+        base_url: { type: string, format: uri }
+
+    RemediateRequest:
+      type: object
+      required: [source, mode]
+      properties:
+        source: { type: string, description: File path or URL }
+        url: { type: string, format: uri }
+        mode:
+          type: string
+          enum: [report, diff, fix]
+          default: report
+
+    EvaluationResult:
+      type: object
+      properties:
+        score: { type: number, minimum: 0, maximum: 100 }
+        grade: { type: string, enum: [A, B, C, D, F] }
+        wcag_level: { type: string, enum: [A, AA, AAA, none] }
+        issues:
+          type: array
+          items:
+            $ref: "#/components/schemas/Issue"
+        quick_wins:
+          type: array
+          items:
+            $ref: "#/components/schemas/Issue"
+        ai_summary: { type: string }
+
+    Issue:
+      type: object
+      properties:
+        id: { type: string }
+        impact: { type: string, enum: [critical, serious, moderate, minor] }
+        description: { type: string }
+        help: { type: string }
+        helpUrl: { type: string, format: uri }
+        nodes:
+          type: array
+          items:
+            type: object
+            properties:
+              target: { type: array, items: { type: string } }
+              html: { type: string }
+
+    Error:
+      type: object
+      properties:
+        error: { type: string }
+
+  responses:
+    BadRequest:
+      description: Invalid request
+      content:
+        application/json:
+          schema:
+            $ref: "#/components/schemas/Error"

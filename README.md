@@ -2,38 +2,77 @@
 
 # A11yAgent
 
-**Accessibility auditing and auto-patching as an MCP server**
+**Agentic accessibility auditing, remediation, and enforcement for any web product**
 
+[![CI](https://github.com/tayyabataimur/a11y-agent/actions/workflows/ci.yml/badge.svg)](https://github.com/tayyabataimur/a11y-agent/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-purple.svg)](https://opensource.org/licenses/MIT)
 [![Node.js >= 18](https://img.shields.io/badge/node-%3E%3D18-brightgreen)](https://nodejs.org)
 [![MCP](https://img.shields.io/badge/MCP-compatible-blue)](https://modelcontextprotocol.io)
 [![TypeScript](https://img.shields.io/badge/TypeScript-strict-blue?logo=typescript)](https://www.typescriptlang.org)
 [![Powered by axe-core](https://img.shields.io/badge/powered%20by-axe--core-orange)](https://github.com/dequelabs/axe-core)
 
-[Getting started](#getting-started) · [Tools](#tools) · [Workflow](#workflow) · [Contributing](#contributing)
+[Quick start](#quick-start) · [Who it's for](#who-its-for) · [Current capabilities](#current-capabilities) · [Integrations](#integrations) · [Roadmap](#roadmap)
 
 </div>
 
 ---
 
-Most accessibility MCP servers give you a list of violations and stop there. **A11yAgent** closes the full loop: evaluate a live site, receive a scored report with before/after code examples, then patch the source file in one call.
+**A11yAgent** is a universal accessibility layer for humans and AI agents.
 
-Works with any AI assistant that supports the Model Context Protocol — Claude, Cursor, GitHub Copilot, Cline, and more.
+It helps teams **evaluate**, **explain**, **prioritize**, **remediate**, and eventually **enforce** accessibility across websites and web apps with the lowest possible setup friction.
 
-```
-evaluate("https://yoursite.com")  →  score 62/100 · Grade C · Non-compliant
-                                       5 auto-fixable violations found
+Most accessibility tools stop at detection. A11yAgent is being built to close the loop:
 
-remediate(source, url, mode="diff")  →  before/after diff for review
+- audit a live experience
+- explain what failed in plain language
+- identify quick wins
+- generate patch previews
+- apply safe fixes
+- rerun and verify improvements
 
-remediate(source, url, mode="fix")   →  4 violations patched, written to disk
-```
+## Vision
 
----
+Make accessibility improvement as easy as running a URL through an agent.
 
-## Getting started
+A11yAgent is not meant to be only for React or Next.js teams. The goal is to become the easiest accessibility workflow for:
 
-**Add to Claude Desktop or Claude Code:**
+- developers
+- designers
+- QA teams
+- founders and PMs
+- agencies
+- accessibility specialists
+- AI assistants using MCP
+
+across:
+
+- static sites
+- SPAs
+- design systems
+- e-commerce products
+- dashboards
+- docs sites
+- React / Next.js / Vue / Svelte / Angular / plain HTML
+
+## Who it's for
+
+### Developers
+Get actionable violations, code examples, patch previews, and safe autofixes.
+
+### Designers
+Understand user impact, hierarchy issues, naming issues, contrast problems, and interaction gaps.
+
+### QA and accessibility reviewers
+Run repeatable audits, compare results, and produce shareable reports.
+
+### AI agents and MCP clients
+Use A11yAgent as an accessibility copilot inside Claude, Cursor, Copilot, Cline, and other MCP-compatible tools.
+
+## Quick start
+
+### MCP setup
+
+Add to Claude Desktop, Claude Code, Cursor, Cline, or any MCP client:
 
 ```json
 {
@@ -46,11 +85,7 @@ remediate(source, url, mode="fix")   →  4 violations patched, written to disk
 }
 ```
 
-**Add to Cursor / Cline / GitHub Copilot:**
-
-Point your editor's MCP config at `npx a11y-agent`.
-
-**Run locally:**
+### Local run
 
 ```sh
 npm install
@@ -59,267 +94,206 @@ npm run build
 node dist/index.js
 ```
 
----
+### CLI examples
 
-## Deployment
-
-**Via npx (recommended for developers)**
-
-Runs on stdio — Claude Desktop and most MCP clients connect this way. Supports `localhost` URLs and offline environments.
-
-```json
-{
-  "mcpServers": {
-    "a11y-agent": { "command": "npx", "args": ["-y", "a11y-agent"] }
-  }
-}
+```sh
+npx a11y-agent audit https://example.com --markdown
+npx a11y-agent audit:file ./index.html --output ./report.md
+npx a11y-agent audit:repo . --max-files 10 --output ./repo-report.json
+npx a11y-agent crawl --url https://example.com --max-pages 10 --markdown
+npx a11y-agent verify ./src/App.tsx --url http://localhost:3000 --markdown
+npx a11y-agent audit http://localhost:3000/dashboard --storage-state ./playwright/.auth/user.json --header 'x-env: staging'
 ```
 
-**HTTP server mode (for shared/hosted instances)**
-
-Set `A11Y_AGENT_PORT` to start the MCP Streamable HTTP server instead of stdio:
+### HTTP mode
 
 ```sh
 A11Y_AGENT_PORT=3000 npx a11y-agent
-# MCP endpoint: http://localhost:3000/mcp
-# Health check:  http://localhost:3000/health
+# MCP endpoint:        http://localhost:3000/mcp
+# Health check:        http://localhost:3000/health
+# OpenAPI spec:        http://localhost:3000/openapi.json
+# Plugin-style config: http://localhost:3000/.well-known/ai-plugin.json
+# JSON API:            http://localhost:3000/api/evaluate
 ```
 
-**Docker (self-host on Railway, Render, or a VPS)**
+### Docker
 
 ```sh
 docker build -t a11y-agent .
 docker run -p 3000:3000 -e A11Y_AGENT_PORT=3000 a11y-agent
 ```
 
-Deploy button for Railway:
-
-[![Deploy on Railway](https://railway.app/button.svg)](https://railway.app/new/template)
-
 > [!NOTE]
-> Hosted instances can only audit public URLs. To audit `localhost` during development, use the `npx` stdio mode.
+> Hosted mode can audit public URLs. For localhost and private dev environments, use local stdio MCP mode.
 
----
+## Integrations
 
-## Workflow
+A11yAgent is designed to become frictionless across multiple surfaces:
 
-The intended flow is three tool calls: evaluate to understand, diff to preview, fix to apply.
+### Available now
+- MCP server via `npx a11y-agent`
+- local stdio mode for AI assistants
+- streamable HTTP server mode
+- JSON HTTP API + OpenAPI + plugin-style manifest
+- live URL evaluation
+- CLI commands for `audit`, `audit:file`, `audit:repo`, `crawl`, and `verify`
+- localhost/dev auth support via Playwright storage state, custom headers, and basic auth
+- JSON and Markdown report export
+- repo and source-file remediation workflows
 
-```
-┌─────────────────────────────────────────────┐
-│  evaluate(url)                              │
-│  → score, grade, WCAG level                │
-│  → ranked issues with code examples        │
-│  → quick_wins: violations ready to patch   │
-└──────────────────┬──────────────────────────┘
-                   │
-┌──────────────────▼──────────────────────────┐
-│  remediate(source, url, mode="diff")        │
-│  → before/after diff, nothing written       │
-│  → fixed[], needs_manual[], skipped[]       │
-└──────────────────┬──────────────────────────┘
-                   │
-┌──────────────────▼──────────────────────────┐
-│  remediate(source, url, mode="fix")         │
-│  → same as diff + writes to disk            │
-│  → written_to_disk: true                    │
-└─────────────────────────────────────────────┘
-```
+### Planned
+- additional CLI commands like `check`, `fix`, and `report`
+- richer regression policies and CI-first fail rules
+- GitHub Action for CI and pull requests
+- site crawling and regression checks
+- stack-aware patchers beyond TSX/JSX
+- hosted dashboard for non-technical teams
 
----
+## Current capabilities
 
-## Tools
+A11yAgent today already supports the core agentic loop:
 
-### `evaluate`
+1. **Evaluate** a live URL
+2. **Rank** issues by severity and impact
+3. **Explain** failures in plain English
+4. **Preview** a remediation diff
+5. **Apply** safe fixes to source files
 
-Evaluates a live URL and produces a scored report readable by any AI assistant.
+### Current tools
 
-**Input:**
+#### `evaluate`
+Audits a live URL and returns:
+- accessibility score
+- grade
+- estimated WCAG level
+- ranked issues
+- quick wins
+- plain-language AI summary
 
-```ts
-{
-  url: string;                  // live URL or file:// path
-  include_html_snippets?: boolean; // include actual failing HTML (default: true)
-  include_passing?: boolean;    // include passing checks (default: false)
-}
-```
+#### `remediate`
+Runs audit + remediation in three modes:
+- `report`
+- `diff`
+- `fix`
 
-**Output (key fields):**
+#### `audit_component`
+Returns raw axe-core violations for a single page or HTML file.
 
-```jsonc
-{
-  "score": 62,           // 0-100
-  "grade": "C",          // A / B / C / D / F
-  "wcag_level": "Non-compliant", // AAA / AA / A / Partial A / Non-compliant
-  "summary": {
-    "violations": 8,
-    "critical": 2,
-    "auto_fixable_count": 5
-  },
-  "top_issues": [
-    {
-      "rank": 1,
-      "violation_id": "image-alt",
-      "impact": "critical",
-      "wcag_criterion": "WCAG 1.1.1",
-      "affected_elements": 6,
-      "headline": "6 images are missing alternative text",
-      "user_impact": "Screen reader users hear nothing or the filename...",
-      "suggestion": "Add an alt attribute to every img element...",
-      "example_before": "<img src=\"hero.jpg\">",
-      "example_after": "<img src=\"hero.jpg\" alt=\"Team collaborating around a whiteboard\">",
-      "auto_fixable": true
-    }
-  ],
-  "quick_wins": [...],   // auto-fixable violations only
-  "ai_summary": "Score: 62/100 (Grade C). Found 8 violations: 2 critical..."
-}
-```
+#### `fix_component`
+Applies a single known fix strategy to a source file.
 
-The `ai_summary` field is a plain-text narrative that any AI assistant can relay directly to a user without further processing.
+#### `audit_repo`
+Scans a project and returns a prioritized accessibility summary.
 
----
+## Current scope vs future scope
 
-### `remediate`
+### Current scope
+The implementation is strongest today for:
+- rendered URL auditing
+- local development workflows
+- TSX / JSX / HTML source remediation
+- React and Next.js-oriented patch workflows
 
-Audits a rendered URL and patches the corresponding source file. All violations are applied in a single chained pass — no re-reading from disk between patches.
+### Future scope
+The product direction is broader:
+- any web stack
+- any user role
+- any integration surface
+- any stage of the delivery lifecycle
 
-**Input:**
+That means evolving from a patcher into a universal accessibility platform with:
+- evaluation
+- remediation
+- workflow automation
+- continuous enforcement
 
-```ts
-{
-  source_path: string;  // .tsx / .jsx / .html file to patch
-  audit_url: string;    // rendered URL to audit (live server or file://)
-  mode: "report" | "diff" | "fix";
-  min_severity?: "minor" | "moderate" | "serious" | "critical"; // default: "serious"
-  only?: string[];      // allowlist of violation IDs (optional)
-}
+## Example workflow
+
+```text
+evaluate("https://example.com")
+  -> score, grade, ranked issues, quick wins
+
+remediate(source, url, mode="diff")
+  -> preview before/after patch
+
+remediate(source, url, mode="fix")
+  -> write safe fixes to disk
 ```
 
-**Modes:**
+## Design principles
 
-| Mode | What it does |
-|---|---|
-| `"report"` | Audit only — returns violations, no changes to any file |
-| `"diff"` | Audit + patch — returns before/after diff, does not write to disk |
-| `"fix"` | Audit + patch + write — applies all auto-fixable violations to disk |
+### 1. Detection is not enough
+Reports should lead to remediation.
 
-**Output:**
+### 2. Low friction wins
+A11yAgent should work with `npx`, MCP, CI, and simple local workflows.
 
-```jsonc
-{
-  "summary": {
-    "total_violations": 6,
-    "auto_fixed": 4,
-    "needs_manual": 2,
-    "written_to_disk": false  // true in "fix" mode
-  },
-  "fixed": [
-    { "violation_id": "image-alt", "wcag": "WCAG 1.1.1", "nodes_affected": 6 }
-  ],
-  "needs_manual": [
-    { "violation_id": "color-contrast", "reason": "Cannot patch without design token context." }
-  ],
-  "diff": {
-    "original": "...",
-    "patched": "..."
-  }
-}
-```
+### 3. Explain for different audiences
+The same issue should be understandable by a developer, designer, PM, or founder.
 
----
+### 4. Safe automation over risky automation
+Autofix only what can be fixed confidently. Escalate the rest with clear guidance.
 
-### `audit_component`
+### 5. Human + AI collaboration
+Agents should assist, not hide tradeoffs. Diffs, confidence, and manual follow-up matter.
 
-Runs a raw axe-core audit on a URL or HTML file and returns the unprocessed violation list. Use `evaluate` if you want scoring and suggestions; use this for direct integration with other tooling.
+## Roadmap
 
-```ts
-{ path: string } // URL or absolute file path
-```
+### Phase 1 — universal evaluation
+- audit public URLs
+- audit localhost URLs
+- support HTML snippets and file-based input
+- improve repo-wide auditing
+- export markdown and JSON reports
 
----
+### Phase 2 — universal remediation
+- extend beyond React / Next.js
+- add HTML, Vue, Svelte, and Angular-aware patchers
+- add stack-aware manual fix guides
+- improve source mapping from rendered issue to code location
+- support before/after verification loops
 
-### `fix_component`
+### Phase 3 — frictionless workflows
+- first-class CLI
+- GitHub Action
+- CI gating and no-regression mode
+- sitemap crawl and critical user flow audits
+- pull-request summaries and issue backlog generation
 
-Patches a single violation in a source file and returns the before/after diff. Use `remediate` for the full loop; use this when you need granular control over individual violations.
+### Phase 4 — accessibility operations
+- team dashboards
+- trend tracking
+- policy enforcement
+- compliance-ready reporting
+- agent-generated remediation plans across large repos
 
-```ts
-{
-  path: string;          // absolute path to .tsx / .jsx / .html
-  violation_id: string;  // axe violation ID
-  write?: boolean;       // write to disk (default: false)
-}
-```
-
-**Supported violation IDs:**
-
-| ID | What it patches | WCAG |
-|---|---|---|
-| `image-alt` | Adds `alt=""` to `<img>` elements missing one | 1.1.1 (A) |
-| `button-name` | Adds `aria-label` to nameless buttons — skips buttons with text content | 4.1.2 (A) |
-| `link-name` | Adds `aria-label` to nameless links — skips links with text content | 2.4.4 (A) |
-| `label` | Annotates inputs missing an associated label | 1.3.1, 4.1.2 (A) |
-| `aria-label` | Annotates interactive elements without accessible names | 4.1.2 (A) |
-| `html-has-lang` | Adds `lang="en"` to `<html>` elements | 3.1.1 (A) |
-| `color-contrast` | Explains the issue with required contrast ratios — cannot auto-patch | 1.4.3 (AA) |
-| `heading-order` | Explains the required heading hierarchy — cannot auto-patch | 1.3.1 (A) |
-
----
-
-### `audit_repo`
-
-Scans a project directory and returns a prioritised summary of violations across all files, sorted by severity.
-
-```ts
-{
-  root: string;          // absolute path to project root
-  baseUrl?: string;      // live dev server URL — required for TSX/JSX files
-  maxFiles?: number;     // default: 20
-}
-```
-
-> [!IMPORTANT]
-> React and Next.js components must be rendered to produce meaningful audit results. Pass a `baseUrl` pointing at your running dev server (e.g. `http://localhost:3000`). Without `baseUrl`, only static `.html` files in the directory are audited.
-
----
-
-## How the patcher works
-
-The AST-based patcher uses [ts-morph](https://ts-morph.com) to parse and modify TypeScript/TSX source files without touching disk until explicitly asked. When `remediate` is called, violations are applied in sequence on the accumulating in-memory source — each patch receives the output of the previous one, so the final write contains all changes in a single operation.
-
-False positives are avoided by checking element content before patching: `button-name` and `link-name` skip elements that already have visible text children and only patch elements that genuinely lack an accessible name.
-
-Axe-core is injected from local `node_modules` rather than a CDN, so audits work in offline and firewalled environments.
-
----
+See also:
+- [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md)
+- [docs/ROADMAP.md](./docs/ROADMAP.md)
 
 ## Tech stack
 
 - **[Model Context Protocol TypeScript SDK](https://github.com/modelcontextprotocol/typescript-sdk)** — MCP server and tool registration
-- **[axe-core](https://github.com/dequelabs/axe-core)** — WCAG 2.0/2.1/2.2 accessibility auditing
-- **[Playwright](https://playwright.dev)** — headless Chromium for rendering live pages
-- **[ts-morph](https://ts-morph.com)** — TypeScript/TSX AST manipulation
-- **[Zod](https://zod.dev)** — runtime schema validation for all tool inputs
-
----
+- **[axe-core](https://github.com/dequelabs/axe-core)** — accessibility rule engine
+- **[Playwright](https://playwright.dev)** — rendering and browser automation
+- **[ts-morph](https://ts-morph.com)** — AST-based source transforms
+- **[Zod](https://zod.dev)** — runtime schema validation
 
 ## Contributing
 
 Issues and PRs are welcome.
 
-To add a new patch strategy:
+High-impact contribution areas:
+- new stack-aware fixers
+- better issue-to-source mapping
+- crawl and report tooling
+- safer autofix strategies
+- role-specific reporting
+- CI and GitHub integrations
 
-1. Add the strategy function to `src/lib/patcher.ts` and register it in `PATCH_REGISTRY` and `AUTO_FIXABLE`
-2. Add plain-English guidance (headline, user impact, suggestion, before/after examples) to `VIOLATION_GUIDANCE` in `src/tools/evaluate.ts`
-3. Reference the axe violation ID and WCAG criterion in both
-
----
-
-## Authors
+## Author
 
 Built by [Tayyaba Taimur](https://tayyaba.dev).
-
----
 
 ## Licence
 

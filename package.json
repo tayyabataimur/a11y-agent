@@ -1,9 +1,13 @@
 {
   "name": "a11y-agent",
   "version": "0.1.0",
-  "description": "Agentic MCP server that audits and auto-patches accessibility violations in React/Next.js components",
+  "description": "Universal MCP and CLI tool for evaluating, fixing, and enforcing accessibility across any website or web app",
   "type": "module",
   "main": "dist/index.js",
+  "exports": {
+    ".": "./dist/index.js",
+    "./harness-sdk": "./dist/integrations/harness-sdk.js"
+  },
   "bin": {
     "a11y-agent": "dist/index.js"
   },
@@ -27,9 +31,18 @@
     "mcp",
     "model-context-protocol",
     "axe-core",
+    "agentic",
+    "cli",
+    "web-accessibility",
+    "assistive-technology",
+    "compliance",
+    "openapi",
+    "api",
     "react",
     "nextjs",
-    "agentic"
+    "vue",
+    "svelte",
+    "angular"
   ],
   "author": "Tayyaba Taimur",
   "license": "MIT",

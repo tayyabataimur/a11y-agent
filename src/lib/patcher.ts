@@ -1,4 +1,4 @@
-import { Project, SyntaxKind, type JsxOpeningElement, type JsxSelfClosingElement, type Node } from "ts-morph";
+import { Project, SyntaxKind, type JsxOpeningElement, type JsxSelfClosingElement } from "ts-morph";
 import { readFileSync } from "fs";
 
 export interface PatchResult {
@@ -10,21 +10,31 @@ export interface PatchResult {
   changed: boolean;
 }
 
-// Metadata about a violation's patchability — returned in remediate reports
-export interface ViolationMeta {
+export type AutofixSafety = "safe-autofix" | "guided-fix" | "manual-only";
+
+export interface AutofixMeta {
   id: string;
-  auto_fixable: boolean;
+  title: string;
+  category: string;
+  safety: AutofixSafety;
+  frameworks: string[];
   wcag: string;
   explanation: string;
 }
 
 type PatchStrategy = (source: string, filename: string) => Omit<PatchResult, "violation_id" | "original">;
 
+type StrategyEntry = {
+  meta: AutofixMeta;
+  strategy: PatchStrategy;
+};
+
 type JsxElement = JsxOpeningElement | JsxSelfClosingElement;
 
-// Returns true if a JsxOpeningElement has non-whitespace text content children,
-// meaning the element already has a visible accessible name through its content.
-// ts-morph wraps JSX children in a SyntaxList, so we look one level deeper.
+function isHtmlLike(filename: string, source: string): boolean {
+  return /\.(html?|vue|svelte|astro)$/i.test(filename) || /^\s*<!doctype html|^\s*<html[\s>]/i.test(source);
+}
+
 function hasTextContent(openingEl: JsxOpeningElement): boolean {
   const parent = openingEl.getParent();
   if (!parent || parent.getKind() !== SyntaxKind.JsxElement) return false;
@@ -44,11 +54,7 @@ function hasTextContent(openingEl: JsxOpeningElement): boolean {
   return false;
 }
 
-// ─── Patch strategies ────────────────────────────────────────────────────────
-// Each strategy receives the current source string and a filename (for ts-morph's
-// in-memory filesystem). They return the patched source without touching disk.
-
-function strategyImageAlt(source: string, filename: string): Omit<PatchResult, "violation_id" | "original"> {
+function strategyImageAltJsx(source: string, filename: string): Omit<PatchResult, "violation_id" | "original"> {
   const project = new Project({ useInMemoryFileSystem: true });
   const file = project.createSourceFile(filename, source);
   let patched = false;
@@ -81,7 +87,28 @@ function strategyImageAlt(source: string, filename: string): Omit<PatchResult, "
   };
 }
 
-function strategyButtonName(source: string, filename: string): Omit<PatchResult, "violation_id" | "original"> {
+function strategyImageAltHtml(source: string): Omit<PatchResult, "violation_id" | "original"> {
+  let patched = false;
+  const fixed = source.replace(/<img\b(?![^>]*\balt\s*=)([^>]*?)(\/?)>/gi, (_match, attrs, selfClosing) => {
+    patched = true;
+    return `<img${attrs} alt=""${selfClosing}>`;
+  });
+
+  return {
+    patched: fixed,
+    explanation: patched
+      ? 'Added alt="" to HTML img elements missing an alt attribute. Replace the empty string with descriptive text, or keep alt="" for purely decorative images.'
+      : "No HTML img elements found missing alt attributes.",
+    wcag: "WCAG 1.1.1 Non-text Content (Level A)",
+    changed: patched,
+  };
+}
+
+function strategyImageAlt(source: string, filename: string): Omit<PatchResult, "violation_id" | "original"> {
+  return isHtmlLike(filename, source) ? strategyImageAltHtml(source) : strategyImageAltJsx(source, filename);
+}
+
+function strategyButtonNameJsx(source: string, filename: string): Omit<PatchResult, "violation_id" | "original"> {
   const project = new Project({ useInMemoryFileSystem: true });
   const file = project.createSourceFile(filename, source);
   let patched = false;
@@ -119,7 +146,33 @@ function strategyButtonName(source: string, filename: string): Omit<PatchResult,
   };
 }
 
-function strategyLinkName(source: string, filename: string): Omit<PatchResult, "violation_id" | "original"> {
+function strategyButtonNameHtml(source: string): Omit<PatchResult, "violation_id" | "original"> {
+  let patched = false;
+  const fixed = source.replace(
+    /<button\b(?![^>]*\b(?:aria-label|aria-labelledby|title)\s*=)([^>]*)>([\s\S]*?)<\/button>/gi,
+    (match, attrs, inner) => {
+      const visibleText = inner.replace(/<[^>]+>/g, " ").trim();
+      if (visibleText.length > 0) return match;
+      patched = true;
+      return `<button${attrs} aria-label="Describe this button action">${inner}</button>`;
+    }
+  );
+
+  return {
+    patched: fixed,
+    explanation: patched
+      ? "Added aria-label to HTML button elements that did not expose an accessible name. Replace the placeholder with the real action label."
+      : "No nameless HTML button elements found.",
+    wcag: "WCAG 4.1.2 Name, Role, Value (Level A)",
+    changed: patched,
+  };
+}
+
+function strategyButtonName(source: string, filename: string): Omit<PatchResult, "violation_id" | "original"> {
+  return isHtmlLike(filename, source) ? strategyButtonNameHtml(source) : strategyButtonNameJsx(source, filename);
+}
+
+function strategyLinkNameJsx(source: string, filename: string): Omit<PatchResult, "violation_id" | "original"> {
   const project = new Project({ useInMemoryFileSystem: true });
   const file = project.createSourceFile(filename, source);
   let patched = false;
@@ -157,13 +210,43 @@ function strategyLinkName(source: string, filename: string): Omit<PatchResult, "
   };
 }
 
-function strategyInputLabel(source: string, _filename: string): Omit<PatchResult, "violation_id" | "original"> {
+function strategyLinkNameHtml(source: string): Omit<PatchResult, "violation_id" | "original"> {
+  let patched = false;
+  const fixed = source.replace(
+    /<a\b(?![^>]*\b(?:aria-label|aria-labelledby|title)\s*=)([^>]*)>([\s\S]*?)<\/a>/gi,
+    (match, attrs, inner) => {
+      const visibleText = inner.replace(/<[^>]+>/g, " ").trim();
+      if (visibleText.length > 0) return match;
+      patched = true;
+      return `<a${attrs} aria-label="Describe this link destination">${inner}</a>`;
+    }
+  );
+
+  return {
+    patched: fixed,
+    explanation: patched
+      ? "Added aria-label to HTML link elements that did not expose an accessible name. Replace the placeholder with the real destination label."
+      : "No nameless HTML link elements found.",
+    wcag: "WCAG 2.4.4 Link Purpose (Level A)",
+    changed: patched,
+  };
+}
+
+function strategyLinkName(source: string, filename: string): Omit<PatchResult, "violation_id" | "original"> {
+  return isHtmlLike(filename, source) ? strategyLinkNameHtml(source) : strategyLinkNameJsx(source, filename);
+}
+
+function strategyInputLabel(source: string, filename: string): Omit<PatchResult, "violation_id" | "original"> {
+  const comment = isHtmlLike(filename, source)
+    ? " <!-- a11y-agent: add id and associate a <label for=\"...\"> -->"
+    : ' {/* a11y-agent: add id and associate a <label htmlFor="..."> */}';
+
   const lines = source.split("\n");
   let patched = false;
   const patchedLines = lines.map((line) => {
-    if (/<input(?![^>]*\bid\b)/i.test(line) && !line.includes("//")) {
+    if (/<input(?![^>]*\bid\b)/i.test(line) && !line.includes("a11y-agent:")) {
       patched = true;
-      return line + ' {/* a11y-agent: add id and associate a <label htmlFor="..."> */}';
+      return line + comment;
     }
     return line;
   });
@@ -171,20 +254,26 @@ function strategyInputLabel(source: string, _filename: string): Omit<PatchResult
   return {
     patched: patchedLines.join("\n"),
     explanation: patched
-      ? 'Annotated input elements missing an id. Each input needs a unique id and a matching <label htmlFor={id}>, or use aria-labelledby to point at a visible label element.'
+      ? isHtmlLike(filename, source)
+        ? 'Annotated HTML input elements missing an id. Each input needs a unique id and a matching <label for="...">, or use aria-labelledby to point at visible label text.'
+        : 'Annotated input elements missing an id. Each input needs a unique id and a matching <label htmlFor={id}>, or use aria-labelledby to point at a visible label element.'
       : "No unlabelled input elements detected via static analysis.",
     wcag: "WCAG 1.3.1 Info and Relationships (Level A), WCAG 4.1.2 Name, Role, Value (Level A)",
     changed: patched,
   };
 }
 
-function strategyAriaLabel(source: string, _filename: string): Omit<PatchResult, "violation_id" | "original"> {
+function strategyAriaLabel(source: string, filename: string): Omit<PatchResult, "violation_id" | "original"> {
+  const comment = isHtmlLike(filename, source)
+    ? " <!-- a11y-agent: add aria-label or aria-labelledby -->"
+    : " {/* a11y-agent: add aria-label or aria-labelledby */}";
+
   const lines = source.split("\n");
   let patched = false;
   const patchedLines = lines.map((line) => {
-    if (line.includes("onClick") && !line.includes("aria-label") && !line.includes("//")) {
+    if (line.includes("onClick") && !line.includes("aria-label") && !line.includes("a11y-agent:")) {
       patched = true;
-      return line.trimEnd() + " {/* a11y-agent: add aria-label or aria-labelledby */}";
+      return line.trimEnd() + comment;
     }
     return line;
   });
@@ -192,29 +281,28 @@ function strategyAriaLabel(source: string, _filename: string): Omit<PatchResult,
   return {
     patched: patchedLines.join("\n"),
     explanation: patched
-      ? "Annotated interactive elements with onClick handlers that may lack accessible names. Add aria-label with a descriptive string, or ensure visible text content provides the label."
+      ? "Annotated interactive elements with click handlers that may lack accessible names. Add aria-label with a descriptive string, or ensure visible text content provides the label."
       : "No unlabelled interactive elements detected via static analysis.",
     wcag: "WCAG 4.1.2 Name, Role, Value (Level A)",
     changed: patched,
   };
 }
 
-function strategyHtmlLang(source: string, _filename: string): Omit<PatchResult, "violation_id" | "original"> {
-  // Works on HTML files — adds lang="en" to <html> tags missing a lang attribute
-  const patched = /<html(?![^>]*\blang\b)/i.test(source);
-  const fixed = source.replace(/<html(?![^>]*\blang\b)/i, '<html lang="en"');
+function strategyHtmlLang(source: string): Omit<PatchResult, "violation_id" | "original"> {
+  const changed = /<html(?![^>]*\blang\b)/i.test(source);
+  const patched = source.replace(/<html(?![^>]*\blang\b)/i, '<html lang="en"');
 
   return {
-    patched: fixed,
-    explanation: patched
-      ? 'Added lang="en" to the <html> element. Update the value if the page is not in English (e.g. lang="fr", lang="ar").'
+    patched,
+    explanation: changed
+      ? 'Added lang="en" to the <html> element. Update the value if the page is not in English (for example lang="fr" or lang="ar").'
       : "No <html> element found missing a lang attribute.",
     wcag: "WCAG 3.1.1 Language of Page (Level A)",
-    changed: patched,
+    changed,
   };
 }
 
-function strategyColorContrast(source: string, _filename: string): Omit<PatchResult, "violation_id" | "original"> {
+function strategyColorContrast(source: string): Omit<PatchResult, "violation_id" | "original"> {
   return {
     patched: source,
     explanation:
@@ -224,7 +312,7 @@ function strategyColorContrast(source: string, _filename: string): Omit<PatchRes
   };
 }
 
-function strategyHeadingOrder(source: string, _filename: string): Omit<PatchResult, "violation_id" | "original"> {
+function strategyHeadingOrder(source: string): Omit<PatchResult, "violation_id" | "original"> {
   return {
     patched: source,
     explanation:
@@ -234,41 +322,132 @@ function strategyHeadingOrder(source: string, _filename: string): Omit<PatchResu
   };
 }
 
-// ─── Registry ─────────────────────────────────────────────────────────────────
-
-export const PATCH_REGISTRY: Record<string, PatchStrategy> = {
-  "image-alt": strategyImageAlt,
-  "button-name": strategyButtonName,
-  "link-name": strategyLinkName,
-  "label": strategyInputLabel,
-  "aria-label": strategyAriaLabel,
-  "html-has-lang": strategyHtmlLang,
-  "color-contrast": strategyColorContrast,
-  "heading-order": strategyHeadingOrder,
+export const PATCH_REGISTRY: Record<string, StrategyEntry> = {
+  "image-alt": {
+    meta: {
+      id: "image-alt",
+      title: "Missing image alt text",
+      category: "non-text-content",
+      safety: "safe-autofix",
+      frameworks: ["html", "react", "nextjs", "vue", "svelte", "astro"],
+      wcag: "WCAG 1.1.1 Non-text Content (Level A)",
+      explanation: "Adds alt attributes to images missing them.",
+    },
+    strategy: strategyImageAlt,
+  },
+  "button-name": {
+    meta: {
+      id: "button-name",
+      title: "Missing button accessible name",
+      category: "accessible-name",
+      safety: "safe-autofix",
+      frameworks: ["html", "react", "nextjs", "vue", "svelte", "astro"],
+      wcag: "WCAG 4.1.2 Name, Role, Value (Level A)",
+      explanation: "Adds aria-label to buttons that appear to have no accessible name.",
+    },
+    strategy: strategyButtonName,
+  },
+  "link-name": {
+    meta: {
+      id: "link-name",
+      title: "Missing link accessible name",
+      category: "accessible-name",
+      safety: "safe-autofix",
+      frameworks: ["html", "react", "nextjs", "vue", "svelte", "astro"],
+      wcag: "WCAG 2.4.4 Link Purpose (Level A)",
+      explanation: "Adds aria-label to links that appear to have no accessible name.",
+    },
+    strategy: strategyLinkName,
+  },
+  label: {
+    meta: {
+      id: "label",
+      title: "Missing form label",
+      category: "forms",
+      safety: "guided-fix",
+      frameworks: ["html", "react", "nextjs"],
+      wcag: "WCAG 1.3.1 / 4.1.2 (Level A)",
+      explanation: "Adds guidance annotations for inputs that need explicit labels.",
+    },
+    strategy: strategyInputLabel,
+  },
+  "aria-label": {
+    meta: {
+      id: "aria-label",
+      title: "Missing accessible name hint",
+      category: "accessible-name",
+      safety: "guided-fix",
+      frameworks: ["html", "react", "nextjs"],
+      wcag: "WCAG 4.1.2 Name, Role, Value (Level A)",
+      explanation: "Adds guidance annotations where manual naming is still required.",
+    },
+    strategy: strategyAriaLabel,
+  },
+  "html-has-lang": {
+    meta: {
+      id: "html-has-lang",
+      title: "Missing page language",
+      category: "document",
+      safety: "safe-autofix",
+      frameworks: ["html", "react", "nextjs", "vue", "svelte", "astro"],
+      wcag: "WCAG 3.1.1 Language of Page (Level A)",
+      explanation: "Adds a lang attribute to the root html element when missing.",
+    },
+    strategy: strategyHtmlLang,
+  },
+  "color-contrast": {
+    meta: {
+      id: "color-contrast",
+      title: "Insufficient color contrast",
+      category: "visual-design",
+      safety: "manual-only",
+      frameworks: ["html", "react", "nextjs", "vue", "svelte", "astro"],
+      wcag: "WCAG 1.4.3 Contrast Minimum (Level AA)",
+      explanation: "Requires design-context changes and cannot be auto-fixed safely.",
+    },
+    strategy: strategyColorContrast,
+  },
+  "heading-order": {
+    meta: {
+      id: "heading-order",
+      title: "Incorrect heading order",
+      category: "document-structure",
+      safety: "manual-only",
+      frameworks: ["html", "react", "nextjs", "vue", "svelte", "astro"],
+      wcag: "WCAG 1.3.1 Info and Relationships (Level A)",
+      explanation: "Requires document-structure judgment and cannot be auto-fixed safely.",
+    },
+    strategy: strategyHeadingOrder,
+  },
 };
 
-export const AUTO_FIXABLE = new Set([
-  "image-alt",
-  "button-name",
-  "link-name",
-  "label",
-  "aria-label",
-  "html-has-lang",
-]);
+export const AUTO_FIXABLE = new Set(
+  Object.values(PATCH_REGISTRY)
+    .filter((entry) => entry.meta.safety === "safe-autofix")
+    .map((entry) => entry.meta.id)
+);
 
-// ─── Public API ───────────────────────────────────────────────────────────────
+export const GUIDED_FIXABLE = new Set(
+  Object.values(PATCH_REGISTRY)
+    .filter((entry) => entry.meta.safety === "guided-fix")
+    .map((entry) => entry.meta.id)
+);
 
-/**
- * Patch a single violation on a source string. Does not touch disk.
- * filename is used only for ts-morph's in-memory filesystem (extension matters).
- */
+export function getAutofixMeta(violationId: string): AutofixMeta | undefined {
+  return PATCH_REGISTRY[violationId]?.meta;
+}
+
+export function getAutofixCatalog(): AutofixMeta[] {
+  return Object.values(PATCH_REGISTRY).map((entry) => entry.meta);
+}
+
 export function patchSource(
   source: string,
   filename: string,
   violationId: string
 ): PatchResult {
-  const strategy = PATCH_REGISTRY[violationId];
-  if (!strategy) {
+  const entry = PATCH_REGISTRY[violationId];
+  if (!entry) {
     return {
       violation_id: violationId,
       original: source,
@@ -279,15 +458,10 @@ export function patchSource(
     };
   }
 
-  const result = strategy(source, filename);
+  const result = entry.strategy(source, filename);
   return { violation_id: violationId, original: source, ...result };
 }
 
-/**
- * Apply multiple patches sequentially on the same source.
- * Each patch receives the output of the previous one, so all violations are
- * fixed in a single pass without re-reading from disk.
- */
 export function patchAll(
   source: string,
   filename: string,
@@ -307,9 +481,6 @@ export function patchAll(
   return { finalSource: current, results };
 }
 
-/**
- * Read a file from disk and patch a single violation. Convenience wrapper.
- */
 export function patch(filePath: string, violationId: string): PatchResult {
   const source = readFileSync(filePath, "utf-8");
   const filename = filePath.replace(/.*\//, "");

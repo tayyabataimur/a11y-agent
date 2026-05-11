@@ -1,7 +1,8 @@
-import { chromium, type Browser, type Page } from "playwright";
+import { chromium, type Browser, type BrowserContext, type Page } from "playwright";
 import type { AxeResults, Result, NodeResult } from "axe-core";
 import { readFileSync } from "fs";
 import { createRequire } from "module";
+import type { AuthConfig } from "../core/auth.js";
 
 export interface Violation {
   id: string;
@@ -47,13 +48,19 @@ function mapNode(node: NodeResult): Violation["nodes"][number] {
   };
 }
 
-export async function runAxeAudit(target: string): Promise<AuditResult> {
+export async function runAxeAudit(target: string, auth?: AuthConfig): Promise<AuditResult> {
   let browser: Browser | null = null;
+  let context: BrowserContext | null = null;
   let page: Page | null = null;
 
   try {
     browser = await chromium.launch({ headless: true });
-    page = await browser.newPage();
+    context = await browser.newContext({
+      ...(auth?.storageState ? { storageState: auth.storageState } : {}),
+      ...(auth?.headers ? { extraHTTPHeaders: auth.headers } : {}),
+      ...(auth?.basicAuth ? { httpCredentials: auth.basicAuth } : {}),
+    });
+    page = await context.newPage();
 
     const isAbsoluteUrl =
       target.startsWith("http://") ||
@@ -95,6 +102,12 @@ export async function runAxeAudit(target: string): Promise<AuditResult> {
     };
   } finally {
     await page?.close();
+    await context?.close();
     await browser?.close();
   }
+}
+
+export async function runAxeAuditHtml(html: string, auth?: AuthConfig): Promise<AuditResult> {
+  const dataUrl = `data:text/html;charset=utf-8,${encodeURIComponent(html)}`;
+  return runAxeAudit(dataUrl, auth);
 }

@@ -1,11 +1,11 @@
 ---
 name: a11y-agent
-description: "Use this skill whenever the user wants to check, audit, score, or fix accessibility issues on a website, web app, or React/Next.js component. Triggers include: any mention of 'accessibility', 'a11y', 'WCAG', 'screen reader', 'aria', 'alt text', 'colour contrast', 'keyboard navigation', or requests like 'is my site accessible?', 'fix accessibility issues', 'make my site WCAG compliant', 'audit my components for a11y', 'what's my accessibility score', or 'help me pass an accessibility audit'. Also trigger when a user shares a URL or component file and asks for a review or improvement — even without explicitly mentioning accessibility — if the context suggests they care about quality or compliance. Use this skill early and often; most web projects have fixable a11y issues and users benefit from knowing about them."
+description: "Use this skill whenever the user wants to check, audit, score, explain, or fix accessibility issues on any website, web app, design system, HTML page, or frontend codebase. Triggers include: any mention of 'accessibility', 'a11y', 'WCAG', 'screen reader', 'aria', 'alt text', 'colour contrast', 'keyboard navigation', or requests like 'is my site accessible?', 'fix accessibility issues', 'make my site WCAG compliant', 'audit my components for a11y', 'what's my accessibility score', or 'help me pass an accessibility audit'. Also trigger when a user shares a URL, page, component, or repo and asks for review or improvement. Use this skill early and often; most web products have fixable accessibility issues and benefit from prioritized guidance plus safe remediation."
 ---
 
 # A11yAgent
 
-Accessibility evaluation, scoring, and auto-patching via the A11yAgent MCP server.
+Accessibility evaluation, scoring, remediation, and guidance via the A11yAgent MCP server.
 
 ## Prerequisites
 

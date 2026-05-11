@@ -1,9 +1,9 @@
 import { z } from "zod";
 import { readFileSync, writeFileSync } from "fs";
 import { runAxeAudit, type Violation } from "../lib/axe-runner.js";
-import { patchAll, AUTO_FIXABLE, PATCH_REGISTRY } from "../lib/patcher.js";
-
-// ─── Config schema ─────────────────────────────────────────────────────────────
+import { patchAll, AUTO_FIXABLE, PATCH_REGISTRY, getAutofixMeta, type AutofixMeta } from "../lib/patcher.js";
+import { verifyPatchedSource, type VerifyResult } from "../core/verify-service.js";
+import { authConfigSchema } from "../core/auth.js";
 
 export const RemediateMode = z.enum(["report", "diff", "fix"]).describe(
   [
@@ -26,13 +26,13 @@ export const remediateSchema = z.object({
   source_path: z
     .string()
     .describe(
-      "Absolute path to the React/TSX/JSX source file to patch. This is the file that will be modified in 'fix' mode."
+      "Absolute path to the source file to patch. HTML is supported directly; framework files can be patched when a safe strategy exists."
     ),
 
   audit_url: z
     .string()
     .describe(
-      "URL or absolute file path to audit with axe-core. For React components this should be the live rendered URL (e.g. http://localhost:3000/about). For plain HTML files, pass the absolute file path."
+      "URL or absolute file path to audit with axe-core. For framework components this should be the live rendered URL (e.g. http://localhost:3000/about). For plain HTML files, pass the absolute file path."
     ),
 
   mode: RemediateMode.default("diff"),
@@ -47,17 +47,24 @@ export const remediateSchema = z.object({
     .describe(
       "Optional allowlist of axe violation IDs to act on (e.g. ['image-alt', 'button-name']). When provided, only these violations are patched. All others appear in the report but are skipped. Omit to act on all violations above min_severity."
     ),
+
+  verify: z
+    .boolean()
+    .default(true)
+    .describe(
+      "When true, rerun verification after patching when supported. HTML files can be verified inline in diff or fix mode; rendered framework routes can be re-audited in fix mode."
+    ),
+  auth: authConfigSchema.optional(),
 });
 
 export type RemediateInput = z.infer<typeof remediateSchema>;
-
-// ─── Output types ──────────────────────────────────────────────────────────────
 
 export interface FixedViolation {
   violation_id: string;
   wcag: string;
   explanation: string;
   nodes_affected: number;
+  autofix?: AutofixMeta;
 }
 
 export interface ManualViolation {
@@ -67,6 +74,7 @@ export interface ManualViolation {
   wcag: string[];
   reason: string;
   nodes: Array<{ selector: string; html: string; failureSummary: string }>;
+  autofix?: AutofixMeta;
 }
 
 export interface SkippedViolation {
@@ -80,34 +88,32 @@ export interface RemediateResult {
   audit_url: string;
   source_path: string;
   min_severity: string;
+  autofix_catalog: AutofixMeta[];
   summary: {
     total_violations: number;
     auto_fixed: number;
     needs_manual: number;
     skipped: number;
     written_to_disk: boolean;
+    verification_attempted: boolean;
   };
   fixed: FixedViolation[];
   needs_manual: ManualViolation[];
   skipped: SkippedViolation[];
-  // Only present in "diff" and "fix" modes when changes were made
   diff?: {
     original: string;
     patched: string;
   };
+  verification?: VerifyResult;
 }
-
-// ─── Implementation ────────────────────────────────────────────────────────────
 
 function meetsThreshold(impact: Violation["impact"], minSeverity: string): boolean {
   return (SEVERITY_ORDER[impact] ?? 0) >= (SEVERITY_ORDER[minSeverity] ?? 0);
 }
 
 export async function remediate(input: RemediateInput): Promise<RemediateResult> {
-  // Step 1: Run the audit
-  const auditResult = await runAxeAudit(input.audit_url);
+  const auditResult = await runAxeAudit(input.audit_url, input.auth);
 
-  // Early return for "report" mode — no patching, just the violation list
   if (input.mode === "report") {
     const violations = auditResult.violations;
     const manualViolations: ManualViolation[] = violations.map((v) => ({
@@ -119,6 +125,7 @@ export async function remediate(input: RemediateInput): Promise<RemediateResult>
         ? 'Use mode "diff" or "fix" to auto-patch this violation.'
         : "No automatic patch available. Manual remediation required.",
       nodes: v.nodes,
+      ...(getAutofixMeta(v.id) ? { autofix: getAutofixMeta(v.id) } : {}),
     }));
 
     return {
@@ -126,12 +133,14 @@ export async function remediate(input: RemediateInput): Promise<RemediateResult>
       audit_url: input.audit_url,
       source_path: input.source_path,
       min_severity: input.min_severity,
+      autofix_catalog: Object.keys(PATCH_REGISTRY).map((id) => getAutofixMeta(id)!).filter(Boolean),
       summary: {
         total_violations: violations.length,
         auto_fixed: 0,
         needs_manual: violations.filter((v) => !AUTO_FIXABLE.has(v.id)).length,
         skipped: 0,
         written_to_disk: false,
+        verification_attempted: false,
       },
       fixed: [],
       needs_manual: manualViolations,
@@ -139,13 +148,13 @@ export async function remediate(input: RemediateInput): Promise<RemediateResult>
     };
   }
 
-  // Step 2: Categorise violations
   const toFix: string[] = [];
   const manualViolations: ManualViolation[] = [];
   const skippedViolations: SkippedViolation[] = [];
 
   for (const v of auditResult.violations) {
-    // Check severity threshold
+    const meta = getAutofixMeta(v.id);
+
     if (!meetsThreshold(v.impact, input.min_severity)) {
       skippedViolations.push({
         violation_id: v.id,
@@ -155,7 +164,6 @@ export async function remediate(input: RemediateInput): Promise<RemediateResult>
       continue;
     }
 
-    // Check allowlist
     if (input.only && !input.only.includes(v.id)) {
       skippedViolations.push({
         violation_id: v.id,
@@ -165,7 +173,6 @@ export async function remediate(input: RemediateInput): Promise<RemediateResult>
       continue;
     }
 
-    // Check if patchable
     if (AUTO_FIXABLE.has(v.id) && v.id in PATCH_REGISTRY) {
       toFix.push(v.id);
     } else {
@@ -174,21 +181,22 @@ export async function remediate(input: RemediateInput): Promise<RemediateResult>
         impact: v.impact,
         description: v.description,
         wcag: v.wcag,
-        reason: "No automatic patch available for this violation type. Manual remediation required.",
+        reason: meta?.safety === "guided-fix"
+          ? "This issue has guidance support but still requires human review and product-specific edits."
+          : "No automatic patch available for this violation type. Manual remediation required.",
         nodes: v.nodes,
+        ...(meta ? { autofix: meta } : {}),
       });
     }
   }
 
-  // Step 3: Apply patches in a single chained pass (no re-reading from disk)
   const originalSource = readFileSync(input.source_path, "utf-8");
   const filename = input.source_path.replace(/.*\//, "");
-
   const { finalSource, results: patchResults } = patchAll(originalSource, filename, toFix);
 
-  // Build fixed/notFixed from patch results
   const fixedViolations: FixedViolation[] = [];
   for (const pr of patchResults) {
+    const meta = getAutofixMeta(pr.violation_id);
     if (pr.changed) {
       const violation = auditResult.violations.find((v) => v.id === pr.violation_id);
       fixedViolations.push({
@@ -196,9 +204,9 @@ export async function remediate(input: RemediateInput): Promise<RemediateResult>
         wcag: pr.wcag,
         explanation: pr.explanation,
         nodes_affected: violation?.nodes.length ?? 0,
+        ...(meta ? { autofix: meta } : {}),
       });
     } else {
-      // Patch strategy ran but made no changes (e.g. violation is in file but patcher couldn't find it)
       manualViolations.push({
         violation_id: pr.violation_id,
         impact: auditResult.violations.find((v) => v.id === pr.violation_id)?.impact ?? "moderate",
@@ -206,17 +214,30 @@ export async function remediate(input: RemediateInput): Promise<RemediateResult>
         wcag: auditResult.violations.find((v) => v.id === pr.violation_id)?.wcag ?? [],
         reason: pr.explanation,
         nodes: auditResult.violations.find((v) => v.id === pr.violation_id)?.nodes ?? [],
+        ...(meta ? { autofix: meta } : {}),
       });
     }
   }
 
   const sourceChanged = finalSource !== originalSource;
 
-  // Step 4: Write to disk in "fix" mode
   let writtenToDisk = false;
   if (input.mode === "fix" && sourceChanged) {
     writeFileSync(input.source_path, finalSource, "utf-8");
     writtenToDisk = true;
+  }
+
+  let verification: VerifyResult | undefined;
+  if (input.verify && sourceChanged) {
+    verification = await verifyPatchedSource({
+      source_path: input.source_path,
+      audit_url: input.audit_url,
+      original_source: originalSource,
+      patched_source: finalSource,
+      baseline_audit: auditResult,
+      mode: input.mode,
+      ...(input.auth ? { auth: input.auth } : {}),
+    });
   }
 
   return {
@@ -224,16 +245,19 @@ export async function remediate(input: RemediateInput): Promise<RemediateResult>
     audit_url: input.audit_url,
     source_path: input.source_path,
     min_severity: input.min_severity,
+    autofix_catalog: Object.keys(PATCH_REGISTRY).map((id) => getAutofixMeta(id)!).filter(Boolean),
     summary: {
       total_violations: auditResult.violations.length,
       auto_fixed: fixedViolations.length,
       needs_manual: manualViolations.length,
       skipped: skippedViolations.length,
       written_to_disk: writtenToDisk,
+      verification_attempted: Boolean(input.verify && sourceChanged),
     },
     fixed: fixedViolations,
     needs_manual: manualViolations,
     skipped: skippedViolations,
-    ...(sourceChanged && { diff: { original: originalSource, patched: finalSource } }),
+    ...(sourceChanged ? { diff: { original: originalSource, patched: finalSource } } : {}),
+    ...(verification ? { verification } : {}),
   };
 }

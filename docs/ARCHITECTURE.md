@@ -1,8 +1,8 @@
-# A11yAgent Architecture Direction
+# Loop11y Architecture Direction
 
 ## Product goal
 
-A11yAgent should become a universal accessibility layer for any web product and any MCP-capable agent workflow.
+Loop11y should become a universal accessibility layer for any web product and any MCP-capable agent workflow.
 
 It should support three levels of value:
 
@@ -68,7 +68,7 @@ Recommended remediation modes:
 
 ## 3. Workflow layer
 
-A11yAgent should be usable through:
+Loop11y should be usable through:
 
 - MCP server
 - CLI
@@ -138,7 +138,7 @@ Every issue should be explainable for different users:
 
 ## Long-term differentiation
 
-A11yAgent should not be just another accessibility scanner.
+Loop11y should not be just another accessibility scanner.
 
 It should become the easiest way to:
 

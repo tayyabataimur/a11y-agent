@@ -1,9 +1,9 @@
 {
   "schema_version": "v1",
-  "name_for_human": "A11yAgent",
-  "name_for_model": "a11y_agent",
+  "name_for_human": "Loop11y",
+  "name_for_model": "loop11y",
   "description_for_human": "Audit, explain, and remediate web accessibility issues on any URL or site.",
-  "description_for_model": "Use A11yAgent to evaluate web accessibility (WCAG/axe-core), crawl sites for aggregated issues, audit code repositories, and generate or apply safe remediation patches. Pass URLs in evaluate; pass file paths or URLs in remediate.",
+  "description_for_model": "Use Loop11y to evaluate web accessibility (WCAG/axe-core), crawl sites for aggregated issues, audit code repositories, and generate or apply safe remediation patches. Pass URLs in evaluate; pass file paths or URLs in remediate.",
   "auth": { "type": "none" },
   "api": {
     "type": "openapi",
@@ -11,5 +11,5 @@
   },
   "logo_url": "https://a11y.tayyaba.dev/logo.png",
   "contact_email": "tayyabataimur@users.noreply.github.com",
-  "legal_info_url": "https://github.com/tayyabataimur/a11y-agent/blob/main/LICENSE"
+  "legal_info_url": "https://github.com/tayyabataimur/loop11y/blob/main/LICENSE"
 }

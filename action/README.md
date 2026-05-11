@@ -1,4 +1,4 @@
-# A11yAgent GitHub Action
+# Loop11y GitHub Action
 
 Run accessibility audits on URLs or repos in CI. Posts results as PR comments. Optional score threshold gates the job.
 
@@ -13,7 +13,7 @@ jobs:
   audit:
     runs-on: ubuntu-latest
     steps:
-      - uses: tayyabataimur/a11y-agent/action@v1
+      - uses: tayyabataimur/loop11y/action@v1
         with:
           url: https://example.com
           fail-under: 80
@@ -29,7 +29,7 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - uses: tayyabataimur/a11y-agent/action@v1
+      - uses: tayyabataimur/loop11y/action@v1
         with:
           repo-path: ./src
           max-files: 50
@@ -57,7 +57,7 @@ jobs:
 
 ## Publishing
 
-Tag this repo `v1` (and `v1.x.y`) so consumers can pin `tayyabataimur/a11y-agent@v1`.
+Tag this repo `v1` (and `v1.x.y`) so consumers can pin `tayyabataimur/loop11y@v1`.
 
 ```sh
 git tag -a v1 -m "Release v1"

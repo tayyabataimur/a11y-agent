@@ -1,6 +1,6 @@
 # Examples
 
-Minimal apps with intentional accessibility issues for testing A11yAgent.
+Minimal apps with intentional accessibility issues for testing Loop11y.
 
 | Example | Stack | What it shows |
 |---------|-------|---------------|
@@ -11,19 +11,19 @@ Minimal apps with intentional accessibility issues for testing A11yAgent.
 ## Run an audit on any example
 
 ```sh
-# URL audit (run the example, then point a11y-agent at it)
-npx a11y-agent audit http://localhost:3000
+# URL audit (run the example, then point loop11y at it)
+npx loop11y audit http://localhost:3000
 
 # File audit
-npx a11y-agent audit:file examples/static-html/index.html
+npx loop11y audit:file examples/static-html/index.html
 
 # Repo audit
-npx a11y-agent audit:repo examples/nextjs --max-files 10
+npx loop11y audit:repo examples/nextjs --max-files 10
 ```
 
 ## Generate fixes
 
 ```sh
-npx a11y-agent remediate examples/static-html/index.html --mode diff
-npx a11y-agent fix_component examples/nextjs/app/page.tsx image-alt
+npx loop11y remediate examples/static-html/index.html --mode diff
+npx loop11y fix_component examples/nextjs/app/page.tsx image-alt
 ```

@@ -1,12 +1,12 @@
 name: Bug report
-description: Report a defect in A11yAgent
+description: Report a defect in Loop11y
 labels: [bug]
 body:
   - type: input
     id: version
     attributes:
-      label: A11yAgent version
-      description: Output of `npx a11y-agent --version`
+      label: Loop11y version
+      description: Output of `npx loop11y --version`
       placeholder: 0.1.0
     validations:
       required: true

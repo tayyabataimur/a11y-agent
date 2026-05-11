@@ -1,8 +1,8 @@
-# A11yAgent Implementation Plan
+# Loop11y Implementation Plan
 
 ## Goal
 
-Implement A11yAgent as a universal accessibility platform that works through MCP, CLI, and other agent harnesses with low-friction integration.
+Implement Loop11y as a universal accessibility platform that works through MCP, CLI, and other agent harnesses with low-friction integration.
 
 This plan covers:
 
@@ -144,17 +144,17 @@ Prepare codebase so all new capabilities can be added without duplicating logic.
 ## Phase 1 — CLI mode + exports
 
 ### Purpose
-Make A11yAgent useful without MCP and establish reporting surface.
+Make Loop11y useful without MCP and establish reporting surface.
 
 ### Commands to implement
 
 ```bash
-npx a11y-agent audit <url>
-npx a11y-agent audit:file <path>
-npx a11y-agent audit:repo <path>
-npx a11y-agent report <input.json> --format markdown
-npx a11y-agent fix <source-path> --url <url>
-npx a11y-agent verify <source-path> --url <url>
+npx loop11y audit <url>
+npx loop11y audit:file <path>
+npx loop11y audit:repo <path>
+npx loop11y report <input.json> --format markdown
+npx loop11y fix <source-path> --url <url>
+npx loop11y verify <source-path> --url <url>
 ```
 
 ### CLI MVP features
@@ -431,7 +431,7 @@ Dependencies: Phase 0, Phase 4
 ## Phase 8 — ChatGPT plugin config + harness-agnostic integration
 
 ### Purpose
-Make A11yAgent usable in more agent environments than MCP alone.
+Make Loop11y usable in more agent environments than MCP alone.
 
 ### Reality check
 Different harnesses support different integration models:
@@ -526,13 +526,13 @@ Dependencies: all previous phases
 ## CLI commands to expose
 
 ```bash
-a11y-agent audit <url>
-a11y-agent audit:file <path>
-a11y-agent audit:repo <path>
-a11y-agent crawl <url>
-a11y-agent fix <source>
-a11y-agent verify <source>
-a11y-agent export <report.json> --format markdown
+loop11y audit <url>
+loop11y audit:file <path>
+loop11y audit:repo <path>
+loop11y crawl <url>
+loop11y fix <source>
+loop11y verify <source>
+loop11y export <report.json> --format markdown
 ```
 
 ---
@@ -652,7 +652,7 @@ Mitigation:
 
 # Definition of success
 
-A11yAgent is successful when:
+Loop11y is successful when:
 
 - a non-expert can audit a product in minutes
 - a developer can get patch previews without deep setup

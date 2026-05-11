@@ -1,4 +1,4 @@
-# A11yAgent Roadmap
+# Loop11y Roadmap
 
 ## North star
 
@@ -55,7 +55,7 @@ Expand beyond TSX-centric fixes.
 - before/after verification
 
 ### Success metric
-A11yAgent can improve accessibility in mixed-stack repositories, not just React-oriented ones.
+Loop11y can improve accessibility in mixed-stack repositories, not just React-oriented ones.
 
 ---
 
@@ -74,7 +74,7 @@ Meet users where they already work.
 - critical flow auditing
 
 ### Success metric
-Teams can run A11yAgent in local development and CI without custom glue code.
+Teams can run Loop11y in local development and CI without custom glue code.
 
 ---
 
@@ -91,7 +91,7 @@ Help teams scale accessibility practice over time.
 - accessibility score comparisons over time
 
 ### Success metric
-A11yAgent becomes part of product delivery, not a one-off audit tool.
+Loop11y becomes part of product delivery, not a one-off audit tool.
 
 ---
 

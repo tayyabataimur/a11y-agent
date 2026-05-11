@@ -1,8 +1,8 @@
-# A11yAgent Integrations
+# Loop11y Integrations
 
 ## HTTP API
 
-When `A11Y_AGENT_PORT` is set, A11yAgent exposes both MCP and JSON HTTP endpoints.
+When `LOOP11Y_PORT` is set, Loop11y exposes both MCP and JSON HTTP endpoints.
 
 ### Endpoints
 
@@ -43,9 +43,9 @@ http://localhost:3000/openapi.json
 Import the lightweight Node client:
 
 ```ts
-import { A11yAgentClient } from "a11y-agent/harness-sdk";
+import { Loop11yClient } from "loop11y/harness-sdk";
 
-const client = new A11yAgentClient({ baseUrl: "http://localhost:3000" });
+const client = new Loop11yClient({ baseUrl: "http://localhost:3000" });
 const result = await client.evaluate({ url: "https://example.com" });
 ```
 
@@ -60,6 +60,6 @@ CLI supports:
 Examples:
 
 ```bash
-npx a11y-agent audit https://example.com --json --fail-on critical
-npx a11y-agent crawl --url https://example.com --max-pages 20 --baseline ./baseline.json
+npx loop11y audit https://example.com --json --fail-on critical
+npx loop11y crawl --url https://example.com --max-pages 20 --baseline ./baseline.json
 ```

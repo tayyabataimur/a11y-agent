@@ -238,13 +238,13 @@ function strategyLinkName(source: string, filename: string): Omit<PatchResult, "
 
 function strategyInputLabel(source: string, filename: string): Omit<PatchResult, "violation_id" | "original"> {
   const comment = isHtmlLike(filename, source)
-    ? " <!-- a11y-agent: add id and associate a <label for=\"...\"> -->"
-    : ' {/* a11y-agent: add id and associate a <label htmlFor="..."> */}';
+    ? " <!-- loop11y: add id and associate a <label for=\"...\"> -->"
+    : ' {/* loop11y: add id and associate a <label htmlFor="..."> */}';
 
   const lines = source.split("\n");
   let patched = false;
   const patchedLines = lines.map((line) => {
-    if (/<input(?![^>]*\bid\b)/i.test(line) && !line.includes("a11y-agent:")) {
+    if (/<input(?![^>]*\bid\b)/i.test(line) && !line.includes("loop11y:")) {
       patched = true;
       return line + comment;
     }
@@ -265,13 +265,13 @@ function strategyInputLabel(source: string, filename: string): Omit<PatchResult,
 
 function strategyAriaLabel(source: string, filename: string): Omit<PatchResult, "violation_id" | "original"> {
   const comment = isHtmlLike(filename, source)
-    ? " <!-- a11y-agent: add aria-label or aria-labelledby -->"
-    : " {/* a11y-agent: add aria-label or aria-labelledby */}";
+    ? " <!-- loop11y: add aria-label or aria-labelledby -->"
+    : " {/* loop11y: add aria-label or aria-labelledby */}";
 
   const lines = source.split("\n");
   let patched = false;
   const patchedLines = lines.map((line) => {
-    if (line.includes("onClick") && !line.includes("aria-label") && !line.includes("a11y-agent:")) {
+    if (line.includes("onClick") && !line.includes("aria-label") && !line.includes("loop11y:")) {
       patched = true;
       return line.trimEnd() + comment;
     }

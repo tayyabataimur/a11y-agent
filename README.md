@@ -1,10 +1,10 @@
 <div align="center">
 
-# A11yAgent
+# Loop11y
 
 **Agentic accessibility auditing, remediation, and enforcement for any web product**
 
-[![CI](https://github.com/tayyabataimur/a11y-agent/actions/workflows/ci.yml/badge.svg)](https://github.com/tayyabataimur/a11y-agent/actions/workflows/ci.yml)
+[![CI](https://github.com/tayyabataimur/loop11y/actions/workflows/ci.yml/badge.svg)](https://github.com/tayyabataimur/loop11y/actions/workflows/ci.yml)
 [![License: MIT](https://img.shields.io/badge/License-MIT-purple.svg)](https://opensource.org/licenses/MIT)
 [![Node.js >= 18](https://img.shields.io/badge/node-%3E%3D18-brightgreen)](https://nodejs.org)
 [![MCP](https://img.shields.io/badge/MCP-compatible-blue)](https://modelcontextprotocol.io)
@@ -17,11 +17,11 @@
 
 ---
 
-**A11yAgent** is a universal accessibility layer for humans and AI agents.
+**Loop11y** is a universal accessibility layer for humans and AI agents.
 
 It helps teams **evaluate**, **explain**, **prioritize**, **remediate**, and eventually **enforce** accessibility across websites and web apps with the lowest possible setup friction.
 
-Most accessibility tools stop at detection. A11yAgent is being built to close the loop:
+Most accessibility tools stop at detection. Loop11y is being built to close the loop:
 
 - audit a live experience
 - explain what failed in plain language
@@ -34,7 +34,7 @@ Most accessibility tools stop at detection. A11yAgent is being built to close th
 
 Make accessibility improvement as easy as running a URL through an agent.
 
-A11yAgent is not meant to be only for React or Next.js teams. The goal is to become the easiest accessibility workflow for:
+Loop11y is not meant to be only for React or Next.js teams. The goal is to become the easiest accessibility workflow for:
 
 - developers
 - designers
@@ -66,7 +66,7 @@ Understand user impact, hierarchy issues, naming issues, contrast problems, and 
 Run repeatable audits, compare results, and produce shareable reports.
 
 ### AI agents and MCP clients
-Use A11yAgent as an accessibility copilot inside Claude, Cursor, Copilot, Cline, and other MCP-compatible tools.
+Use Loop11y as an accessibility copilot inside Claude, Cursor, Copilot, Cline, and other MCP-compatible tools.
 
 ## Quick start
 
@@ -77,9 +77,9 @@ Add to Claude Desktop, Claude Code, Cursor, Cline, or any MCP client:
 ```json
 {
   "mcpServers": {
-    "a11y-agent": {
+    "loop11y": {
       "command": "npx",
-      "args": ["-y", "a11y-agent"]
+      "args": ["-y", "loop11y"]
     }
   }
 }
@@ -97,18 +97,18 @@ node dist/index.js
 ### CLI examples
 
 ```sh
-npx a11y-agent audit https://example.com --markdown
-npx a11y-agent audit:file ./index.html --output ./report.md
-npx a11y-agent audit:repo . --max-files 10 --output ./repo-report.json
-npx a11y-agent crawl --url https://example.com --max-pages 10 --markdown
-npx a11y-agent verify ./src/App.tsx --url http://localhost:3000 --markdown
-npx a11y-agent audit http://localhost:3000/dashboard --storage-state ./playwright/.auth/user.json --header 'x-env: staging'
+npx loop11y audit https://example.com --markdown
+npx loop11y audit:file ./index.html --output ./report.md
+npx loop11y audit:repo . --max-files 10 --output ./repo-report.json
+npx loop11y crawl --url https://example.com --max-pages 10 --markdown
+npx loop11y verify ./src/App.tsx --url http://localhost:3000 --markdown
+npx loop11y audit http://localhost:3000/dashboard --storage-state ./playwright/.auth/user.json --header 'x-env: staging'
 ```
 
 ### HTTP mode
 
 ```sh
-A11Y_AGENT_PORT=3000 npx a11y-agent
+LOOP11Y_PORT=3000 npx loop11y
 # MCP endpoint:        http://localhost:3000/mcp
 # Health check:        http://localhost:3000/health
 # OpenAPI spec:        http://localhost:3000/openapi.json
@@ -119,8 +119,8 @@ A11Y_AGENT_PORT=3000 npx a11y-agent
 ### Docker
 
 ```sh
-docker build -t a11y-agent .
-docker run -p 3000:3000 -e A11Y_AGENT_PORT=3000 a11y-agent
+docker build -t loop11y .
+docker run -p 3000:3000 -e LOOP11Y_PORT=3000 loop11y
 ```
 
 > [!NOTE]
@@ -128,10 +128,10 @@ docker run -p 3000:3000 -e A11Y_AGENT_PORT=3000 a11y-agent
 
 ## Integrations
 
-A11yAgent is designed to become frictionless across multiple surfaces:
+Loop11y is designed to become frictionless across multiple surfaces:
 
 ### Available now
-- MCP server via `npx a11y-agent`
+- MCP server via `npx loop11y`
 - local stdio mode for AI assistants
 - streamable HTTP server mode
 - JSON HTTP API + OpenAPI + plugin-style manifest
@@ -151,7 +151,7 @@ A11yAgent is designed to become frictionless across multiple surfaces:
 
 ## Current capabilities
 
-A11yAgent today already supports the core agentic loop:
+Loop11y today already supports the core agentic loop:
 
 1. **Evaluate** a live URL
 2. **Rank** issues by severity and impact
@@ -226,7 +226,7 @@ remediate(source, url, mode="fix")
 Reports should lead to remediation.
 
 ### 2. Low friction wins
-A11yAgent should work with `npx`, MCP, CI, and simple local workflows.
+Loop11y should work with `npx`, MCP, CI, and simple local workflows.
 
 ### 3. Explain for different audiences
 The same issue should be understandable by a developer, designer, PM, or founder.

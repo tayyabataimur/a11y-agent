@@ -14,7 +14,7 @@ body:
     id: proposal
     attributes:
       label: Proposal
-      description: What should A11yAgent do?
+      description: What should Loop11y do?
     validations:
       required: true
 

@@ -84,7 +84,7 @@ function extractUrlsFromSitemap(xml: string, origin: string): string[] {
 
 function buildFetchHeaders(auth?: AuthConfig): Record<string, string> {
   const headers: Record<string, string> = {
-    "user-agent": "A11yAgent/0.1 crawler",
+    "user-agent": "Loop11y/0.1 crawler",
     accept: "text/html,application/xml,text/xml;q=0.9,*/*;q=0.8",
     ...(auth?.headers ?? {}),
   };

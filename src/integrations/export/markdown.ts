@@ -183,5 +183,5 @@ export function toMarkdownReport(value: unknown): string {
   if (isRepoAuditResult(value)) return renderRepoAuditMarkdown(value);
   if (isVerifyResult(value)) return renderVerifyMarkdown(value);
   if (isCrawlSiteResult(value)) return renderCrawlMarkdown(value);
-  return "# A11yAgent Report\n\nType not recognized for Markdown export. Use JSON export instead.\n";
+  return "# Loop11y Report\n\nType not recognized for Markdown export. Use JSON export instead.\n";
 }

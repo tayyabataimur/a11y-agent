@@ -16,8 +16,8 @@ async function main(): Promise<void> {
     return;
   }
 
-  const port = process.env["A11Y_AGENT_PORT"]
-    ? parseInt(process.env["A11Y_AGENT_PORT"], 10)
+  const port = process.env["LOOP11Y_PORT"]
+    ? parseInt(process.env["LOOP11Y_PORT"], 10)
     : null;
 
   if (port !== null) {

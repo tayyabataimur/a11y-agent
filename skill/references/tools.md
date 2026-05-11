@@ -1,4 +1,4 @@
-# A11yAgent Tool Reference
+# Loop11y Tool Reference
 
 Complete input/output documentation for all five tools.
 

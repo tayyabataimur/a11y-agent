@@ -1,8 +1,8 @@
 blank_issues_enabled: false
 contact_links:
   - name: Security report
-    url: https://github.com/tayyabataimur/a11y-agent/security/advisories/new
+    url: https://github.com/tayyabataimur/loop11y/security/advisories/new
     about: Report a vulnerability privately. Do not file a public issue.
   - name: Discussions
-    url: https://github.com/tayyabataimur/a11y-agent/discussions
+    url: https://github.com/tayyabataimur/loop11y/discussions
     about: Questions, ideas, show-and-tell.

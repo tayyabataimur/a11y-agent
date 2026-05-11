@@ -1,12 +1,12 @@
-# Contributing to A11yAgent
+# Contributing to Loop11y
 
 Thanks for your interest! This project aims to make accessibility improvement frictionless across stacks and surfaces.
 
 ## Quick start
 
 ```sh
-git clone https://github.com/tayyabataimur/a11y-agent
-cd a11y-agent
+git clone https://github.com/tayyabataimur/loop11y
+cd loop11y
 npm install
 npx playwright install chromium
 npm run typecheck
@@ -63,7 +63,7 @@ node dist/index.js audit https://example.com
 ## Reporting bugs
 
 Use the bug report template. Include:
-- A11yAgent version (`npx a11y-agent --version`)
+- Loop11y version (`npx loop11y --version`)
 - Node version
 - OS
 - Minimal reproduction (URL or file)

@@ -1,4 +1,4 @@
-# Fly.io deployment for A11yAgent HTTP API.
+# Fly.io deployment for Loop11y HTTP API.
 # Vercel cannot run Playwright + Chromium (>250MB serverless limit), so the
 # backend lives on Fly while the demo site (web/) deploys to Vercel.
 #
@@ -13,7 +13,7 @@ primary_region = "iad"
   dockerfile = "../Dockerfile"
 
 [env]
-  A11Y_AGENT_PORT = "3000"
+  LOOP11Y_PORT = "3000"
   PUBLIC_URL = "https://a11y-api.fly.dev"
 
 [http_service]

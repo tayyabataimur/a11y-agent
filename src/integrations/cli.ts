@@ -10,7 +10,7 @@ import { auditRepo } from "../tools/scan.js";
 import { crawlSite } from "../tools/crawl.js";
 
 function printHelp(): void {
-  process.stdout.write(`A11yAgent CLI\n\nUsage:\n  a11y-agent audit <url> [--json|--markdown] [--output <file>] [auth flags]\n  a11y-agent audit:file <path> [--json|--markdown] [--output <file>] [auth flags]\n  a11y-agent audit:repo <path> [--base-url <url>] [--max-files <n>] [--json|--markdown] [--output <file>] [auth flags]\n  a11y-agent crawl --url <url> [--max-pages <n>] [--json|--markdown] [--output <file>] [auth flags]\n  a11y-agent crawl --sitemap <url> [--max-pages <n>] [--json|--markdown] [--output <file>] [auth flags]\n  a11y-agent verify <source-path> --url <url> [--json|--markdown] [--output <file>] [auth flags]\n  a11y-agent --help\n\nAuth flags:\n  --storage-state <file>\n  --basic-auth-user <user> --basic-auth-pass <pass>\n  --header "Name: Value"   (repeatable)\n\nThreshold flags:\n  --fail-on <critical|serious|moderate|minor>\n  --max-violations <n>\n  --baseline <report.json>\n\nNotes:\n  - No arguments starts MCP server mode\n  - Crawl currently supports same-origin discovery and sitemap seeding\n`);
+  process.stdout.write(`Loop11y CLI\n\nUsage:\n  loop11y audit <url> [--json|--markdown] [--output <file>] [auth flags]\n  loop11y audit:file <path> [--json|--markdown] [--output <file>] [auth flags]\n  loop11y audit:repo <path> [--base-url <url>] [--max-files <n>] [--json|--markdown] [--output <file>] [auth flags]\n  loop11y crawl --url <url> [--max-pages <n>] [--json|--markdown] [--output <file>] [auth flags]\n  loop11y crawl --sitemap <url> [--max-pages <n>] [--json|--markdown] [--output <file>] [auth flags]\n  loop11y verify <source-path> --url <url> [--json|--markdown] [--output <file>] [auth flags]\n  loop11y --help\n\nAuth flags:\n  --storage-state <file>\n  --basic-auth-user <user> --basic-auth-pass <pass>\n  --header "Name: Value"   (repeatable)\n\nThreshold flags:\n  --fail-on <critical|serious|moderate|minor>\n  --max-violations <n>\n  --baseline <report.json>\n\nNotes:\n  - No arguments starts MCP server mode\n  - Crawl currently supports same-origin discovery and sitemap seeding\n`);
 }
 
 function readFlagValue(args: string[], name: string): string | undefined {
@@ -217,7 +217,7 @@ export async function runCli(rawArgs: string[]): Promise<void> {
     case "audit": {
       const target = args[1];
       if (!target || target.startsWith("--")) {
-        throw new Error("Missing URL. Usage: a11y-agent audit <url> [--json|--markdown] [--output <file>]");
+        throw new Error("Missing URL. Usage: loop11y audit <url> [--json|--markdown] [--output <file>]");
       }
       const result = await evaluateUrl({ url: target, include_html_snippets: true, ...(auth ? { auth } : {}) });
       emitResult(result, format, structured, outputPath, result.ai_summary);
@@ -228,7 +228,7 @@ export async function runCli(rawArgs: string[]): Promise<void> {
     case "audit:file": {
       const filePath = args[1];
       if (!filePath || filePath.startsWith("--")) {
-        throw new Error("Missing file path. Usage: a11y-agent audit:file <path> [--json|--markdown] [--output <file>]");
+        throw new Error("Missing file path. Usage: loop11y audit:file <path> [--json|--markdown] [--output <file>]");
       }
       const result = await evaluateUrl({ url: normalizeFileTarget(filePath), include_html_snippets: true, ...(auth ? { auth } : {}) });
       emitResult(result, format, structured, outputPath, result.ai_summary);
@@ -239,7 +239,7 @@ export async function runCli(rawArgs: string[]): Promise<void> {
     case "audit:repo": {
       const repoPath = args[1];
       if (!repoPath || repoPath.startsWith("--")) {
-        throw new Error("Missing repo path. Usage: a11y-agent audit:repo <path> [--base-url <url>] [--max-files <n>] [--json|--markdown] [--output <file>]");
+        throw new Error("Missing repo path. Usage: loop11y audit:repo <path> [--base-url <url>] [--max-files <n>] [--json|--markdown] [--output <file>]");
       }
       const root = normalizeExistingPath(repoPath);
       const baseUrl = readFlagValue(args, "--base-url");
@@ -261,7 +261,7 @@ export async function runCli(rawArgs: string[]): Promise<void> {
       const sitemap = readFlagValue(args, "--sitemap");
       const maxPages = parseMaxFiles(readFlagValue(args, "--max-pages")) ?? 20;
       if (!url && !sitemap) {
-        throw new Error("Usage: a11y-agent crawl --url <url> | --sitemap <url> [--max-pages <n>] [--json|--markdown] [--output <file>]");
+        throw new Error("Usage: loop11y crawl --url <url> | --sitemap <url> [--max-pages <n>] [--json|--markdown] [--output <file>]");
       }
       const result = await crawlSite({
         ...(url ? { url } : {}),
@@ -279,7 +279,7 @@ export async function runCli(rawArgs: string[]): Promise<void> {
       const sourcePath = args[1];
       const auditUrl = readFlagValue(args, "--url");
       if (!sourcePath || sourcePath.startsWith("--") || !auditUrl) {
-        throw new Error("Usage: a11y-agent verify <source-path> --url <url> [--json|--markdown] [--output <file>]");
+        throw new Error("Usage: loop11y verify <source-path> --url <url> [--json|--markdown] [--output <file>]");
       }
       const result = await verifyRemediation({
         source_path: normalizeExistingPath(sourcePath),

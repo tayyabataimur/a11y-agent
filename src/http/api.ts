@@ -18,7 +18,7 @@ export function buildOpenApiSpec(port: number): Record<string, unknown> {
   return {
     openapi: "3.1.0",
     info: {
-      title: "A11yAgent HTTP API",
+      title: "Loop11y HTTP API",
       version: "0.1.0",
       description: "HTTP API for accessibility evaluation, crawl, repo audit, remediation, and verification.",
     },
@@ -39,8 +39,8 @@ export function buildPluginManifest(port: number): Record<string, unknown> {
   const base = `http://localhost:${port}`;
   return {
     schema_version: "v1",
-    name_for_human: "A11yAgent",
-    name_for_model: "a11y_agent",
+    name_for_human: "Loop11y",
+    name_for_model: "loop11y",
     description_for_human: "Evaluate, crawl, remediate, and verify accessibility issues.",
     description_for_model: "Use this tool to audit web accessibility, crawl websites, remediate issues safely, and verify improvements.",
     auth: { type: "none" },

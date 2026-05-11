@@ -33,7 +33,7 @@ Out of scope:
 
 ## Operator responsibilities
 
-A11yAgent fetches and renders arbitrary URLs via Playwright. If you expose the HTTP server publicly:
+Loop11y fetches and renders arbitrary URLs via Playwright. If you expose the HTTP server publicly:
 
 - Run behind authentication or in a private network
 - Restrict outbound network access from the host (block link-local, RFC1918, metadata endpoints)

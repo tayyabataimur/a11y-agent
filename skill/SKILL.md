@@ -1,22 +1,22 @@
 ---
-name: a11y-agent
+name: loop11y
 description: "Use this skill whenever the user wants to check, audit, score, explain, or fix accessibility issues on any website, web app, design system, HTML page, or frontend codebase. Triggers include: any mention of 'accessibility', 'a11y', 'WCAG', 'screen reader', 'aria', 'alt text', 'colour contrast', 'keyboard navigation', or requests like 'is my site accessible?', 'fix accessibility issues', 'make my site WCAG compliant', 'audit my components for a11y', 'what's my accessibility score', or 'help me pass an accessibility audit'. Also trigger when a user shares a URL, page, component, or repo and asks for review or improvement. Use this skill early and often; most web products have fixable accessibility issues and benefit from prioritized guidance plus safe remediation."
 ---
 
-# A11yAgent
+# Loop11y
 
-Accessibility evaluation, scoring, remediation, and guidance via the A11yAgent MCP server.
+Accessibility evaluation, scoring, remediation, and guidance via the Loop11y MCP server.
 
 ## Prerequisites
 
-The user needs the A11yAgent MCP server connected. If the tools (`evaluate`, `remediate`, `audit_component`, `fix_component`, `audit_repo`) are not available in your tool list, show them how to install it:
+The user needs the Loop11y MCP server connected. If the tools (`evaluate`, `remediate`, `audit_component`, `fix_component`, `audit_repo`) are not available in your tool list, show them how to install it:
 
 ```json
 {
   "mcpServers": {
-    "a11y-agent": {
+    "loop11y": {
       "command": "npx",
-      "args": ["-y", "a11y-agent"]
+      "args": ["-y", "loop11y"]
     }
   }
 }

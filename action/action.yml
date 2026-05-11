@@ -1,4 +1,4 @@
-name: A11yAgent
+name: Loop11y
 description: Run accessibility audits on URLs or repos and post results to PRs
 author: tayyabataimur
 branding:
@@ -49,9 +49,9 @@ runs:
       with:
         node-version: 20
 
-    - name: Install A11yAgent
+    - name: Install Loop11y
       shell: bash
-      run: npm install -g a11y-agent@latest
+      run: npm install -g loop11y@latest
 
     - name: Install Playwright Chromium
       shell: bash
@@ -70,11 +70,11 @@ runs:
         REPORT_PATH="${{ runner.temp }}/a11y-report.json"
         MD_PATH="${{ runner.temp }}/a11y-report.md"
         if [ -n "$INPUT_URL" ]; then
-          a11y-agent audit "$INPUT_URL" --output "$REPORT_PATH"
-          a11y-agent audit "$INPUT_URL" --markdown --output "$MD_PATH"
+          loop11y audit "$INPUT_URL" --output "$REPORT_PATH"
+          loop11y audit "$INPUT_URL" --markdown --output "$MD_PATH"
         else
-          a11y-agent audit:repo "$INPUT_REPO_PATH" --max-files "$INPUT_MAX_FILES" --output "$REPORT_PATH"
-          a11y-agent audit:repo "$INPUT_REPO_PATH" --max-files "$INPUT_MAX_FILES" --markdown --output "$MD_PATH"
+          loop11y audit:repo "$INPUT_REPO_PATH" --max-files "$INPUT_MAX_FILES" --output "$REPORT_PATH"
+          loop11y audit:repo "$INPUT_REPO_PATH" --max-files "$INPUT_MAX_FILES" --markdown --output "$MD_PATH"
         fi
         SCORE=$(node -e "const r=require('$REPORT_PATH');console.log(r.score ?? r.summary?.score ?? 0)")
         GRADE=$(node -e "const r=require('$REPORT_PATH');console.log(r.grade ?? r.summary?.grade ?? 'F')")
@@ -99,7 +99,7 @@ runs:
         script: |
           const fs = require('fs');
           const md = fs.readFileSync(process.env.MD_PATH, 'utf8');
-          const body = `## A11yAgent Report\n\n**Score:** ${process.env.SCORE} | **Grade:** ${process.env.GRADE}\n\n<details><summary>Full report</summary>\n\n${md}\n\n</details>`;
+          const body = `## Loop11y Report\n\n**Score:** ${process.env.SCORE} | **Grade:** ${process.env.GRADE}\n\n<details><summary>Full report</summary>\n\n${md}\n\n</details>`;
           await github.rest.issues.createComment({
             owner: context.repo.owner,
             repo: context.repo.repo,

@@ -59,7 +59,7 @@ const TOOLS: Tool[] = [
 
 export function createServer(): Server {
   const server = new Server(
-    { name: "a11y-agent", version: "0.1.0" },
+    { name: "loop11y", version: "0.1.0" },
     { capabilities: { tools: {} } }
   );
 
@@ -122,7 +122,7 @@ export async function startStdio(): Promise<void> {
   const server = createServer();
   const transport = new StdioServerTransport();
   await server.connect(transport);
-  process.stderr.write("a11y-agent MCP server running on stdio\n");
+  process.stderr.write("loop11y MCP server running on stdio\n");
 }
 
 export async function startHttp(port: number): Promise<void> {
@@ -198,6 +198,6 @@ export async function startHttp(port: number): Promise<void> {
   });
 
   httpServer.listen(port, () => {
-    process.stderr.write(`a11y-agent MCP server running on http://localhost:${port}/mcp\n`);
+    process.stderr.write(`loop11y MCP server running on http://localhost:${port}/mcp\n`);
   });
 }

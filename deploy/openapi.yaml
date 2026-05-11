@@ -1,13 +1,13 @@
 openapi: 3.1.0
 info:
-  title: A11yAgent HTTP API
+  title: Loop11y HTTP API
   version: 0.1.0
   description: |
     Accessibility evaluation, crawl, repo audit, remediation, and verification.
     Powered by axe-core and Playwright.
   contact:
-    name: A11yAgent
-    url: https://github.com/tayyabataimur/a11y-agent
+    name: Loop11y
+    url: https://github.com/tayyabataimur/loop11y
   license:
     name: MIT
     url: https://opensource.org/licenses/MIT

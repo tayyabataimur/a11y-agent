@@ -1,4 +1,4 @@
-export interface A11yAgentClientOptions {
+export interface Loop11yClientOptions {
   baseUrl: string;
 }
 
@@ -9,13 +9,13 @@ async function postJson<T>(baseUrl: string, path: string, body: unknown): Promis
     body: JSON.stringify(body),
   });
   if (!response.ok) {
-    throw new Error(`A11yAgent request failed: ${response.status} ${response.statusText}`);
+    throw new Error(`Loop11y request failed: ${response.status} ${response.statusText}`);
   }
   return response.json() as Promise<T>;
 }
 
-export class A11yAgentClient {
-  constructor(private readonly options: A11yAgentClientOptions) {}
+export class Loop11yClient {
+  constructor(private readonly options: Loop11yClientOptions) {}
 
   health(): Promise<unknown> {
     return fetch(`${this.options.baseUrl}/health`).then((r) => r.json());

@@ -7,7 +7,7 @@ cd examples/nextjs
 npm install
 npm run dev
 # in another shell
-npx a11y-agent audit http://localhost:3000 --markdown
-npx a11y-agent audit:repo . --max-files 5
-npx a11y-agent remediate app/page.tsx --mode diff
+npx loop11y audit http://localhost:3000 --markdown
+npx loop11y audit:repo . --max-files 5
+npx loop11y remediate app/page.tsx --mode diff
 ```

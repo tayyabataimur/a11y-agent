@@ -43,10 +43,10 @@ RUN npm ci --omit=dev --ignore-scripts
 
 COPY --from=builder /app/dist/ ./dist/
 
-ENV A11Y_AGENT_PORT=3000
+ENV LOOP11Y_PORT=3000
 EXPOSE 3000
 
 HEALTHCHECK --interval=30s --timeout=5s --start-period=15s \
-  CMD node -e "fetch('http://localhost:'+(process.env.A11Y_AGENT_PORT||3000)+'/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
+  CMD node -e "fetch('http://localhost:'+(process.env.LOOP11Y_PORT||3000)+'/health').then(r=>process.exit(r.ok?0:1)).catch(()=>process.exit(1))"
 
 CMD ["node", "dist/index.js"]

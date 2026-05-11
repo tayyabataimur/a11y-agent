@@ -7,6 +7,6 @@ cd examples/vue
 npm install
 npm run dev
 # in another shell
-npx a11y-agent audit http://localhost:3000 --markdown
-npx a11y-agent remediate src/App.vue --mode diff
+npx loop11y audit http://localhost:3000 --markdown
+npx loop11y remediate src/App.vue --mode diff
 ```

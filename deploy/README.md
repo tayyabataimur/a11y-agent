@@ -1,6 +1,6 @@
 # Deployment
 
-A11yAgent ships in two pieces:
+Loop11y ships in two pieces:
 
 | Piece | Where | Why |
 |-------|-------|-----|

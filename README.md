@@ -11,7 +11,7 @@
 [![TypeScript](https://img.shields.io/badge/TypeScript-strict-blue?logo=typescript)](https://www.typescriptlang.org)
 [![Powered by axe-core](https://img.shields.io/badge/powered%20by-axe--core-orange)](https://github.com/dequelabs/axe-core)
 
-[Quick start](#quick-start) · [Who it's for](#who-its-for) · [Current capabilities](#current-capabilities) · [Integrations](#integrations) · [Roadmap](#roadmap)
+[Quick start](#quick-start) · [Who it's for](#who-its-for) · [Current capabilities](#current-capabilities) · [Integrations](#integrations)
 
 </div>
 
@@ -236,36 +236,6 @@ Autofix only what can be fixed confidently. Escalate the rest with clear guidanc
 
 ### 5. Human + AI collaboration
 Agents should assist, not hide tradeoffs. Diffs, confidence, and manual follow-up matter.
-
-## Roadmap
-
-### Phase 1 — universal evaluation
-- audit public URLs
-- audit localhost URLs
-- support HTML snippets and file-based input
-- improve repo-wide auditing
-- export markdown and JSON reports
-
-### Phase 2 — universal remediation
-- extend beyond React / Next.js
-- add HTML, Vue, Svelte, and Angular-aware patchers
-- add stack-aware manual fix guides
-- improve source mapping from rendered issue to code location
-- support before/after verification loops
-
-### Phase 3 — frictionless workflows
-- first-class CLI
-- GitHub Action
-- CI gating and no-regression mode
-- sitemap crawl and critical user flow audits
-- pull-request summaries and issue backlog generation
-
-### Phase 4 — accessibility operations
-- team dashboards
-- trend tracking
-- policy enforcement
-- compliance-ready reporting
-- agent-generated remediation plans across large repos
 
 See also:
 - [docs/ARCHITECTURE.md](./docs/ARCHITECTURE.md)

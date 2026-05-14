@@ -46,6 +46,14 @@
   ],
   "author": "Tayyaba Taimur",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/tayyabataimur/loop11y.git"
+  },
+  "bugs": {
+    "url": "https://github.com/tayyabataimur/loop11y/issues"
+  },
+  "homepage": "https://github.com/tayyabataimur/loop11y#readme",
   "dependencies": {
     "@modelcontextprotocol/sdk": "^1.0.0",
     "axe-core": "^4.10.0",

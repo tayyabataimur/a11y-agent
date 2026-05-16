@@ -1,6 +1,6 @@
 # Loop11y Tool Reference
 
-Complete input/output documentation for all five tools.
+Complete input/output documentation for all six tools.
 
 ---
 
@@ -194,6 +194,43 @@ Patches a single violation in a source file.
   explanation: string;
   wcag: string;
   changed: boolean;
+}
+```
+
+---
+
+## `crawl_site`
+
+Crawls a website from a start URL or sitemap, audits multiple same-origin pages, and aggregates findings.
+
+**Input:**
+```ts
+{
+  start_url?: string;        // crawl from this URL, discovering same-origin links
+  sitemap_url?: string;      // seed from a sitemap.xml
+  max_pages?: number;        // default: 10, max: 50
+  include_html_snippets?: boolean;
+}
+```
+One of `start_url` or `sitemap_url` is required.
+
+**Output:**
+```ts
+{
+  start_url: string;
+  pages_scanned: number;
+  aggregate_score: number;          // average across pages
+  worst_pages: Array<{ url: string; score: number; grade: string }>;
+  most_common_violations: Array<{ id: string; count: number; impact: string }>;
+  pages: Array<{
+    url: string;
+    score: number;
+    grade: string;
+    wcag_level: string;
+    violation_count: number;
+    critical_count: number;
+  }>;
+  timestamp: string;
 }
 ```
 

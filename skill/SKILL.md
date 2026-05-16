@@ -1,165 +1,210 @@
 ---
 name: loop11y
-description: "Use this skill whenever the user wants to check, audit, score, explain, or fix accessibility issues on any website, web app, design system, HTML page, or frontend codebase. Triggers include: any mention of 'accessibility', 'a11y', 'WCAG', 'screen reader', 'aria', 'alt text', 'colour contrast', 'keyboard navigation', or requests like 'is my site accessible?', 'fix accessibility issues', 'make my site WCAG compliant', 'audit my components for a11y', 'what's my accessibility score', or 'help me pass an accessibility audit'. Also trigger when a user shares a URL, page, component, or repo and asks for review or improvement. Use this skill early and often; most web products have fixable accessibility issues and benefit from prioritized guidance plus safe remediation."
+description: "Use whenever the user asks about accessibility, a11y, WCAG, screen readers, ARIA, alt text, colour contrast, keyboard navigation, axe-core, or shares a URL / component / repo and asks for accessibility review, score, audit, fix, or compliance check. Triggers include 'is my site accessible', 'fix accessibility issues', 'WCAG compliance', 'audit a11y', 'accessibility score'. Use this skill early and proactively — most web products have fixable issues."
 ---
 
 # Loop11y
 
-Accessibility evaluation, scoring, remediation, and guidance via the Loop11y MCP server.
+Accessibility evaluation, scoring, remediation, crawling, and verification via the Loop11y MCP server.
 
-## Prerequisites
+## Available tools
 
-The user needs the Loop11y MCP server connected. If the tools (`evaluate`, `remediate`, `audit_component`, `fix_component`, `audit_repo`) are not available in your tool list, show them how to install it:
+| Tool | When to call |
+|---|---|
+| `evaluate` | **Always call first.** Scored audit of one live URL with ranked issues and AI summary. |
+| `crawl_site` | Multi-page audit. User wants whole site / sitemap, not a single page. |
+| `audit_repo` | Codebase scan. User wants to find a11y issues across many source files. |
+| `remediate` | One-call audit + patch source file. Use modes `report` / `diff` / `fix` in that order. |
+| `audit_component` | Raw axe violations only. Use when user wants no scoring layer. |
+| `fix_component` | Patch one violation in one source file. Granular alternative to `remediate`. |
+
+If these tools are missing from your tool list, the MCP server is not connected. Show:
 
 ```json
 {
   "mcpServers": {
-    "loop11y": {
-      "command": "npx",
-      "args": ["-y", "loop11y"]
-    }
+    "loop11y": { "command": "npx", "args": ["-y", "loop11y"] }
   }
 }
 ```
 
-Then ask them to restart and try again.
+Tell the user to add this to their MCP client config and restart.
 
 ---
 
-## The standard workflow
+## Standard workflow
 
-Always follow this order. Don't jump straight to fixing without evaluating first — the score and ranked issues from `evaluate` tell you what to prioritise.
+Default sequence. Deviate only with reason.
 
-### Step 1 — Evaluate
+### 1. Evaluate
 
-Call `evaluate` with the live URL. This gives you a score, grade, WCAG compliance level, and a ranked list of issues with plain-English explanations and code examples.
+Always start here when the user gives any single URL or page.
 
 ```
 evaluate({
-  url: "https://example.com",         // or http://localhost:3000
-  include_html_snippets: true         // shows actual failing HTML in examples
+  url: "https://example.com",      // or http://localhost:3000
+  include_html_snippets: true
 })
 ```
 
-Read the `ai_summary` field and share it with the user in plain language. Focus on:
-- The score and grade (0–100, A–F)
-- The WCAG compliance level (Non-compliant / Partial A / A / AA / AAA)
-- How many violations are auto-fixable (`quick_wins`)
-- The top 3–5 issues from `top_issues`, ranked by impact × blast radius
+Relay `ai_summary` to the user in plain language. Surface:
+- score + grade (0–100, A–F)
+- WCAG level (Non-compliant / Partial A / A / AA / AAA)
+- `quick_wins.length` — count of auto-fixable issues
+- top 3–5 from `top_issues`
 
-If the score is good (≥ 80) and there are no critical violations, tell the user — that's worth acknowledging.
+If score ≥ 80 and zero critical violations: acknowledge the win, don't manufacture problems.
 
-### Step 2 — Offer a fix
+### 2. Offer remediation
 
-If there are auto-fixable violations, offer to patch the source file. Ask the user for the source file path that corresponds to the audited page.
+If `quick_wins` is non-empty, offer to patch source. **Ask for the absolute source file path** that renders the audited URL (the user must provide it — never guess).
 
-Then call `remediate` in `diff` mode first, so the user can review before anything is written:
+Call `remediate` in `diff` mode first:
 
 ```
 remediate({
-  source_path: "/absolute/path/to/Component.tsx",
+  source_path: "/abs/path/to/Component.tsx",
   audit_url: "https://example.com",
   mode: "diff",
-  min_severity: "serious"    // skip minor/moderate unless user wants them too
-})
-```
-
-Show the user the `fixed` array (what will be patched) and `needs_manual` (what can't be auto-patched). Show the diff.
-
-### Step 3 — Apply
-
-Once the user approves, call `remediate` again with `mode: "fix"`:
-
-```
-remediate({
-  source_path: "/absolute/path/to/Component.tsx",
-  audit_url: "https://example.com",
-  mode: "fix",
   min_severity: "serious"
 })
 ```
 
-Confirm `written_to_disk: true` in the response. Tell the user what was changed and what still needs manual attention.
+Show `fixed` (will be patched), `needs_manual` (explain inline), and the diff. **Do not write without explicit user approval.**
+
+### 3. Apply
+
+After approval:
+
+```
+remediate({ source_path: "...", audit_url: "...", mode: "fix", min_severity: "serious" })
+```
+
+Confirm `summary.written_to_disk === true`. Summarise what changed.
+
+### 4. Verify (recommended)
+
+Re-run `evaluate` on the same URL after fixes. Compare scores. If the dev server hot-reloads, the new score reflects the patch. Tell the user the delta.
 
 ---
 
-## Modes and filters
+## Choosing the right tool
 
-**`remediate` modes:**
+**User gave a URL only** → `evaluate`.
+**User gave a URL and "fix it"** → `evaluate` → if `quick_wins` exists, `remediate` in `diff` mode.
+**User said "audit my whole site"** → `crawl_site` ({ start_url, max_pages: 10 }).
+**User said "scan my repo / project"** → `audit_repo` ({ root, baseUrl: their dev server URL }).
+**User wants raw axe output for tooling** → `audit_component`.
+**User has one specific rule to fix** → `fix_component` with that `violation_id`.
+**User asked about WCAG, AA, compliance** → `evaluate`, read `wcag_level` field.
+
+---
+
+## Auth for protected pages
+
+If the URL needs auth (logged-in dashboards, staging behind basic auth, header gates), tell the user to run the CLI directly — MCP mode doesn't take auth flags. Give them:
+
+```sh
+npx loop11y audit <url> \
+  --storage-state ./playwright/.auth/user.json \
+  --header 'x-env: staging' \
+  --basic-auth-user USER --basic-auth-pass PASS \
+  --markdown
+```
+
+For programmatic auth they can also run `LOOP11Y_PORT=3000 npx loop11y` and POST to `/api/evaluate`.
+
+---
+
+## Localhost workflows
+
+`evaluate` works on `http://localhost:PORT` as long as the user's dev server is running. Ask which port if they don't say. Common defaults: 3000 (Next.js, CRA), 5173 (Vite), 4321 (Astro), 8080 (Vue CLI), 8000 (Django/Python).
+
+For `audit_repo` on React/Next/Vue/Svelte projects, `baseUrl` is **required** — without it only static `.html` files get scanned.
+
+---
+
+## `remediate` modes and filters
 
 | Mode | Use when |
 |---|---|
-| `"report"` | User just wants to understand violations, no changes yet |
-| `"diff"` | User wants to preview the patch before applying |
-| `"fix"` | User has approved and wants changes written to disk |
+| `report` | Audit-only. No source touched. |
+| `diff` | Preview patch. Returns before/after, nothing written. |
+| `fix` | Apply patch to disk. Requires user approval first. |
 
-**Severity filter:** Use `min_severity: "critical"` when the user only wants to fix the most serious issues first. Use `"moderate"` for a more complete pass.
-
-**Targeting specific violations:** Use `only: ["image-alt", "button-name"]` if the user has a specific concern (e.g. "just fix the missing alt text").
+| Filter | Use when |
+|---|---|
+| `min_severity: "critical"` | User wants only the worst fixed first |
+| `min_severity: "serious"` | Default. Reasonable scope. |
+| `min_severity: "moderate"` | Thorough pass |
+| `only: ["image-alt", "button-name"]` | User has specific concern |
 
 ---
 
-## Interpreting scores
+## Auto-patchable rules
 
-| Score | Grade | What to tell the user |
+`fix_component` and `remediate` can patch these axe rules automatically:
+
+- `image-alt` (1.1.1) — adds `alt=""`
+- `button-name` (4.1.2) — adds `aria-label`
+- `link-name` (2.4.4) — adds `aria-label`
+- `label` (1.3.1, 4.1.2) — annotates unlabelled inputs
+- `aria-label` (4.1.2) — annotates interactive elements without names
+- `html-has-lang` (3.1.1) — adds `lang="en"`
+
+These are **explanation-only** (no auto-patch — surface in `needs_manual`):
+- `color-contrast` (1.4.3) — needs design tokens
+- `heading-order` (1.3.1) — needs structural rewrite
+- `landmark-one-main` — needs `<main>` wrap
+- `region` — needs landmark wrapping
+
+For each manual one, show the failing selector + HTML from `nodes` so the user has the exact target.
+
+---
+
+## Score interpretation
+
+| Score | Grade | Message |
 |---|---|---|
 | 90–100 | A | Excellent. Few or no violations. |
-| 75–89 | B | Good. Minor issues worth cleaning up. |
-| 55–74 | C | Several violations, some critical. Worth fixing before launch. |
-| 35–54 | D | Significant barriers for users relying on assistive tech. |
-| 0–34 | F | Major accessibility failures. Not WCAG compliant. |
+| 75–89 | B | Good. Minor cleanup worthwhile. |
+| 55–74 | C | Several violations, some critical. Fix before launch. |
+| 35–54 | D | Significant barriers for assistive tech users. |
+| 0–34 | F | Major failures. Not WCAG compliant. |
 
-**WCAG levels:**
-- **Non-compliant** — fails at least one Level A criterion (the baseline)
-- **Partial A** — mostly compliant but gaps remain
-- **A** — passes all Level A checks
-- **AA** — passes A and AA (the standard target for most sites)
-- **AAA** — passes all three levels (rarely required)
-
-Most organisations aim for WCAG 2.1 AA. If the user has a legal or procurement deadline, AA compliance is almost always what they need.
+WCAG target for most sites: **AA**. Legal/procurement deadlines almost always mean AA. AAA only if explicitly required.
 
 ---
 
-## Scanning a whole project
+## Failure modes — how to handle
 
-If the user wants to audit multiple pages at once, use `audit_repo` with their running dev server:
-
-```
-audit_repo({
-  root: "/absolute/path/to/project",
-  baseUrl: "http://localhost:3000",
-  maxFiles: 20
-})
-```
-
-This returns violations sorted by severity across all pages. Use it to identify the most common violations codebase-wide, then call `remediate` on the highest-priority files.
-
-Note: `audit_repo` requires a running dev server for React/Next.js projects — without `baseUrl` it only audits static HTML files.
-
----
-
-## Handling manual violations
-
-Some violations can't be auto-patched. When `needs_manual` is non-empty, explain each one clearly:
-
-- **`color-contrast`** — The fix requires knowing the design tokens. Tell the user to use the [WebAIM Contrast Checker](https://webaim.org/resources/contrastchecker/) and provide the failing colour pair from the `nodes` array.
-- **`heading-order`** — Headings must descend sequentially (h1 → h2 → h3). Show the current heading structure and explain the fix.
-- **`landmark-one-main`** — The page needs a `<main>` element wrapping the primary content.
-- **`region`** — Content outside landmark elements needs to be moved inside `<header>`, `<main>`, `<nav>`, `<aside>`, or `<footer>`.
-
-For each, show the relevant failing HTML from the `nodes` field so the user knows exactly what to look at.
-
----
-
-## Detailed tool reference
-
-Read `references/tools.md` for the full input/output schema of each tool — useful if the user asks about specific parameters or edge cases.
+- **`evaluate` returns network error** → URL may be unreachable, behind auth, or dev server down. Confirm with user.
+- **User asks to fix but won't share source path** → Run `evaluate` only. Surface findings + WCAG criteria so they can fix manually.
+- **`remediate` returns `needs_manual` only, `fixed: []`** → No auto-patch matched. Walk them through manual fixes with `nodes` context.
+- **Source path doesn't render the audited URL** → Patch will miss most violations. Suggest correct file or use `audit_repo` to find candidates.
+- **User wants to gate CI on a11y** → Don't try via MCP. Point to GitHub Action: `tayyabataimur/loop11y/action@v0.1.0`.
 
 ---
 
 ## Tone
 
-- Be specific. Vague accessibility advice is not helpful. Reference the actual failing elements.
-- Don't catastrophise a low score. Explain that accessibility issues are common and fixable.
-- Don't dismiss a high score. Even a Grade A site should be tested with real assistive technology.
-- For manual violations, give the user a concrete next action — not just "fix the contrast".
+- Be specific. Reference actual failing elements with selectors or HTML snippets.
+- Don't catastrophise low scores. Issues are common, fixable, and rarely all-or-nothing.
+- Don't oversell high scores. Even Grade A sites need real assistive-tech testing for full confidence.
+- For manual violations, give one concrete next action, not "fix the contrast".
+- Avoid jargon when explaining to non-developers. Translate axe rule IDs into user impact.
+
+---
+
+## Out of scope
+
+- PDF accessibility — Loop11y audits web pages, not documents.
+- Mobile native apps — web only.
+- Designing colour palettes — link to WebAIM Contrast Checker.
+- Full WCAG legal sign-off — Loop11y is automated; manual testing with assistive tech is still required for compliance certification.
+
+---
+
+## Detailed tool reference
+
+See `references/tools.md` for full input/output schemas of every tool. Read when the user asks about specific parameters, return fields, or edge cases.

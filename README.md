@@ -77,7 +77,7 @@ Loop11y meets you where you build. Pick a path:
 | You are... | Surface | Setup time |
 |---|---|---|
 | Coding with Claude / Cursor / Cline / Copilot | [MCP server](#1-mcp-server-claude-cursor-cline-copilot) | 30s |
-| Using Claude with a guided skill | [Claude skill bundle](#2-claude-skill-bundle) | 1 min |
+| Using an agent that supports skills.sh | [Agent Skill](#2-agent-skill-skillssh) | 30s |
 | In the terminal | [CLI](#3-cli) | 10s |
 | Building a custom agent or GPT | [HTTP API + OpenAPI](#4-http-api--openapi--chatgpt-gpt-action) | 1 min |
 | Gating PRs in CI | [GitHub Action](#5-github-action) | 2 min |
@@ -110,13 +110,16 @@ Config paths:
 - **Cursor**: Settings → MCP
 - **Cline**: VS Code settings → `cline.mcpServers`
 
-### 2. Claude skill bundle
+### 2. Agent Skill (skills.sh)
 
-Adds guided prompting on top of the MCP server (auto-triggers on a11y keywords, runs tools in the right order).
+Adds guided prompting on top of the MCP server so the agent picks the right tool, asks for source paths before patching, handles auth, and re-verifies after fixes. Works with Claude Code, Cursor, Cline, Codex, OpenCode, Goose, and [50+ other agents](https://skills.sh).
 
-1. Install MCP server (path 1 above)
-2. Download `skill.skill` from the [latest release](https://github.com/tayyabataimur/loop11y/releases/latest)
-3. Drop into Claude skills directory or upload via Claude.ai UI
+```sh
+# install MCP server (path 1 above), then:
+npx skills add tayyabataimur/loop11y-skill -g -a claude-code
+```
+
+Use `--all` to install across every supported agent. Source + docs: [tayyabataimur/loop11y-skill](https://github.com/tayyabataimur/loop11y-skill).
 
 ### 3. CLI
 

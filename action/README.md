@@ -55,6 +55,25 @@ jobs:
 | `grade` | Letter grade A–F |
 | `report-path` | JSON report on runner |
 
+## Pinning
+
+The action builds loop11y from the ref the consumer specifies in `uses:`. There is no `loop11y@latest` install — the version that runs is exactly the git ref pinned in the workflow.
+
+**Recommended** (immutable SHA):
+```yaml
+- uses: tayyabataimur/loop11y/action@<full-commit-sha>
+```
+
+**Acceptable** (mutable tag, scoped to a major version):
+```yaml
+- uses: tayyabataimur/loop11y/action@v1
+```
+
+**Not recommended**:
+```yaml
+- uses: tayyabataimur/loop11y/action@main   # floats, breaks reproducibility
+```
+
 ## Publishing
 
 Tag this repo `v1` (and `v1.x.y`) so consumers can pin `tayyabataimur/loop11y@v1`.

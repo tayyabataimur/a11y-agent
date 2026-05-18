@@ -1,0 +1,64 @@
+{
+  "url": "https://tayyaba.dev",
+  "timestamp": "2026-05-18T10:16:10.692Z",
+  "score": 72,
+  "grade": "C",
+  "wcag_level": "Non-compliant",
+  "summary": {
+    "total_checks": 31,
+    "passed": 28,
+    "violations": 3,
+    "critical": 0,
+    "serious": 1,
+    "moderate": 2,
+    "minor": 0,
+    "auto_fixable_count": 0,
+    "incomplete": 0
+  },
+  "top_issues": [
+    {
+      "rank": 1,
+      "violation_id": "region",
+      "impact": "moderate",
+      "wcag_criterion": "BEST-PRACTICE",
+      "affected_elements": 34,
+      "headline": "34 content areas are not inside a landmark region",
+      "user_impact": "Screen reader users navigating by landmarks cannot reach this content using shortcut keys.",
+      "suggestion": "Wrap all page content in appropriate landmark elements: <header>, <nav>, <main>, <aside>, <footer>. Content outside landmarks is invisible to landmark navigation.",
+      "example_before": "<div class=\"flex items-start gap-6 mb-10\">\n<h2 class=\"text-xl font-bold mb-4 dark:text-white\">Career</h2>\n<div class=\"w-12 h-12 rounded-full overflow-hidden flex items-center justify-center border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800\">",
+      "example_after": "<main>Page content here</main>",
+      "auto_fixable": false,
+      "learn_more": "https://dequeuniversity.com/rules/axe/4.11/region?application=axeAPI"
+    },
+    {
+      "rank": 2,
+      "violation_id": "link-name",
+      "impact": "serious",
+      "wcag_criterion": "WCAG 2A, WCAG 244, WCAG 412",
+      "affected_elements": 3,
+      "headline": "3 links have no accessible name",
+      "user_impact": "Screen reader users cannot determine where a link goes. Voice control users cannot click links by name. This fails basic WCAG Level A compliance.",
+      "suggestion": "Every link must have a descriptive accessible name. Add visible text between the anchor tags, or add an aria-label if the link contains only an icon. Avoid 'click here' or 'read more' as the sole link text.",
+      "example_before": "<a href=\"https://github.com/tayyabataimur\" target=\"_blank\" rel=\"noopener noreferrer\" class=\"p-1.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors\">\n<a href=\"https://www.linkedin.com/in/tayyaba-taimur/\" target=\"_blank\" rel=\"noopener noreferrer\" class=\"p-1.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors\">\n<a href=\"mailto:tayyabataimur96@gmail.com\" class=\"p-1.5 text-gray-400 hover:text-gray-600 dark:hover:text-gray-300 transition-colors\">",
+      "example_after": "<a href=\"/about\" aria-label=\"Learn more about us\"><img src=\"arrow.svg\" alt=\"\"></a>",
+      "auto_fixable": false,
+      "learn_more": "https://dequeuniversity.com/rules/axe/4.11/link-name?application=axeAPI"
+    },
+    {
+      "rank": 3,
+      "violation_id": "landmark-one-main",
+      "impact": "moderate",
+      "wcag_criterion": "BEST-PRACTICE",
+      "affected_elements": 1,
+      "headline": "Page is missing a main landmark",
+      "user_impact": "Keyboard and screen reader users cannot skip to the main content. This is a common navigation barrier for users who visit many pages on your site.",
+      "suggestion": "Wrap the primary page content in a <main> element. Every page should have exactly one <main>.",
+      "example_before": "<html lang=\"en\">",
+      "example_after": "<main>...</main>",
+      "auto_fixable": false,
+      "learn_more": "https://dequeuniversity.com/rules/axe/4.11/landmark-one-main?application=axeAPI"
+    }
+  ],
+  "quick_wins": [],
+  "ai_summary": "Accessibility evaluation for https://tayyaba.dev\nScore: 72/100 (Grade C) — WCAG compliance: Non-compliant\n\nFound 3 violations across 31 checks: 0 critical, 1 serious, 2 moderate, 0 minor.\n28 checks pass. 0 could not be fully evaluated automatically.\n\nTop issues to fix (in priority order):\n  1. [MODERATE] 34 content areas are not inside a landmark region\n     WCAG: BEST-PRACTICE\n     Fix: Wrap all page content in appropriate landmark elements: <header>, <nav>, <main>, <aside>, <footer>.\n     Example: <main>Page content here</main>\n  2. [SERIOUS] 3 links have no accessible name\n     WCAG: WCAG 2A, WCAG 244, WCAG 412\n     Fix: Every link must have a descriptive accessible name.\n     Example: <a href=\"/about\" aria-label=\"Learn more about us\"><img src=\"arrow.svg\" alt=\"\"></a>\n  3. [MODERATE] Page is missing a main landmark\n     WCAG: BEST-PRACTICE\n     Fix: Wrap the primary page content in a <main> element.\n     Example: <main>...</main>\n\nTo auto-patch all fixable violations, call the remediate tool with mode='fix' and the source file path."
+}

@@ -125,11 +125,42 @@ export async function startStdio(): Promise<void> {
   process.stderr.write("loop11y MCP server running on stdio\n");
 }
 
+function resolveHttpHost(): { host: string; isLoopback: boolean } {
+  const raw = process.env["LOOP11Y_HOST"]?.trim();
+  if (!raw) return { host: "127.0.0.1", isLoopback: true };
+  const loopback = raw === "127.0.0.1" || raw === "::1" || raw.toLowerCase() === "localhost";
+  return { host: raw, isLoopback: loopback };
+}
+
 export async function startHttp(port: number): Promise<void> {
   const sessions = new Map<string, StreamableHTTPServerTransport>();
+  const { host, isLoopback } = resolveHttpHost();
+  const authToken = process.env["LOOP11Y_AUTH_TOKEN"];
+
+  if (!isLoopback && !authToken) {
+    process.stderr.write(
+      [
+        "⚠️  loop11y HTTP server bound to non-loopback host without LOOP11Y_AUTH_TOKEN.",
+        "    Endpoints /api/remediate, /api/repo-audit, /api/crawl, /api/evaluate accept arbitrary URLs and file paths.",
+        "    They will be exposed to the network. Set LOOP11Y_AUTH_TOKEN=<secret>, restrict outbound network,",
+        "    or bind to 127.0.0.1 (unset LOOP11Y_HOST). See docs/THREAT-MODEL.md.",
+        "",
+      ].join("\n")
+    );
+  }
 
   const httpServer = http.createServer(async (req, res) => {
     const url = new URL(req.url ?? "/", `http://localhost:${port}`);
+
+    if (authToken) {
+      const header = req.headers["authorization"];
+      const provided = typeof header === "string" && header.startsWith("Bearer ") ? header.slice(7) : null;
+      if (provided !== authToken && url.pathname !== "/health") {
+        res.writeHead(401, { "Content-Type": "application/json" });
+        res.end(JSON.stringify({ error: "Unauthorized" }));
+        return;
+      }
+    }
 
     if (url.pathname === "/health") {
       res.writeHead(200, { "Content-Type": "application/json" });
@@ -197,7 +228,7 @@ export async function startHttp(port: number): Promise<void> {
     }
   });
 
-  httpServer.listen(port, () => {
-    process.stderr.write(`loop11y MCP server running on http://localhost:${port}/mcp\n`);
+  httpServer.listen(port, host, () => {
+    process.stderr.write(`loop11y MCP server running on http://${host}:${port}/mcp\n`);
   });
 }

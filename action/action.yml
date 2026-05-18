@@ -49,13 +49,22 @@ runs:
       with:
         node-version: 20
 
-    - name: Install Loop11y
+    # Build loop11y from the checked-out action ref. The consumer pins the
+    # version via `uses: tayyabataimur/loop11y@<tag-or-sha>` — this step builds
+    # exactly that ref. No reliance on `loop11y@latest` from npm.
+    - name: Build Loop11y from action ref
       shell: bash
-      run: npm install -g loop11y@latest
+      working-directory: ${{ github.action_path }}
+      env:
+        PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: "1"
+      run: |
+        set -e
+        npm ci --ignore-scripts
+        npm run build
 
     - name: Install Playwright Chromium
       shell: bash
-      run: npx playwright install chromium --with-deps
+      run: npx --prefix "${{ github.action_path }}" playwright install chromium --with-deps
 
     - name: Run audit
       id: run
@@ -65,16 +74,17 @@ runs:
         INPUT_REPO_PATH: ${{ inputs.repo-path }}
         INPUT_MAX_FILES: ${{ inputs.max-files }}
         INPUT_FAIL_UNDER: ${{ inputs.fail-under }}
+        LOOP11Y_BIN: ${{ github.action_path }}/dist/index.js
       run: |
         set -e
         REPORT_PATH="${{ runner.temp }}/a11y-report.json"
         MD_PATH="${{ runner.temp }}/a11y-report.md"
         if [ -n "$INPUT_URL" ]; then
-          loop11y audit "$INPUT_URL" --output "$REPORT_PATH"
-          loop11y audit "$INPUT_URL" --markdown --output "$MD_PATH"
+          node "$LOOP11Y_BIN" audit "$INPUT_URL" --output "$REPORT_PATH"
+          node "$LOOP11Y_BIN" audit "$INPUT_URL" --markdown --output "$MD_PATH"
         else
-          loop11y audit:repo "$INPUT_REPO_PATH" --max-files "$INPUT_MAX_FILES" --output "$REPORT_PATH"
-          loop11y audit:repo "$INPUT_REPO_PATH" --max-files "$INPUT_MAX_FILES" --markdown --output "$MD_PATH"
+          node "$LOOP11Y_BIN" audit:repo "$INPUT_REPO_PATH" --max-files "$INPUT_MAX_FILES" --output "$REPORT_PATH"
+          node "$LOOP11Y_BIN" audit:repo "$INPUT_REPO_PATH" --max-files "$INPUT_MAX_FILES" --markdown --output "$MD_PATH"
         fi
         SCORE=$(node -e "const r=require('$REPORT_PATH');console.log(r.score ?? r.summary?.score ?? 0)")
         GRADE=$(node -e "const r=require('$REPORT_PATH');console.log(r.grade ?? r.summary?.grade ?? 'F')")

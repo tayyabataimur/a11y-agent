@@ -1,0 +1,93 @@
+{
+  "url": "file:///Users/aashirjaved/Coding/a11y-agent/examples/tayyaba-dev/before.html",
+  "timestamp": "2026-05-18T10:16:49.675Z",
+  "score": 65,
+  "grade": "C",
+  "wcag_level": "Non-compliant",
+  "summary": {
+    "total_checks": 11,
+    "passed": 7,
+    "violations": 4,
+    "critical": 0,
+    "serious": 2,
+    "moderate": 2,
+    "minor": 0,
+    "auto_fixable_count": 1,
+    "incomplete": 1
+  },
+  "top_issues": [
+    {
+      "rank": 1,
+      "violation_id": "link-name",
+      "impact": "serious",
+      "wcag_criterion": "WCAG 2A, WCAG 244, WCAG 412",
+      "affected_elements": 3,
+      "headline": "3 links have no accessible name",
+      "user_impact": "Screen reader users cannot determine where a link goes. Voice control users cannot click links by name. This fails basic WCAG Level A compliance.",
+      "suggestion": "Every link must have a descriptive accessible name. Add visible text between the anchor tags, or add an aria-label if the link contains only an icon. Avoid 'click here' or 'read more' as the sole link text.",
+      "example_before": "<a href=\"https://github.com/tayyabataimur\" target=\"_blank\" rel=\"noopener noreferrer\" class=\"p-1.5\">\n        <svg width=\"20\" height=\"20\" aria-hidden=\"true\"><circle cx=\"10\" cy=\"10\" r=\"8\"></circle></svg>\n      </a>\n<a href=\"https://www.linkedin.com/in/tayyaba-taimur/\" target=\"_blank\" rel=\"noopener noreferrer\" class=\"p-1.5\">\n        <svg width=\"20\" height=\"20\" aria-hidden=\"true\"><rect width=\"20\" height=\"20\"></rect></svg>\n      </a>\n<a href=\"mailto:tayyabataimur96@gmail.com\" class=\"p-1.5\">\n        <svg width=\"20\" height=\"20\" aria-hidden=\"true\"><path d=\"M0 0h20v20H0z\"></path></svg>\n      </a>",
+      "example_after": "<a href=\"/about\" aria-label=\"Learn more about us\"><img src=\"arrow.svg\" alt=\"\"></a>",
+      "auto_fixable": false,
+      "learn_more": "https://dequeuniversity.com/rules/axe/4.11/link-name?application=axeAPI"
+    },
+    {
+      "rank": 2,
+      "violation_id": "html-has-lang",
+      "impact": "serious",
+      "wcag_criterion": "WCAG 2A, WCAG 311",
+      "affected_elements": 1,
+      "headline": "Page is missing a language declaration",
+      "user_impact": "Screen readers cannot select the correct voice/pronunciation engine. Translation tools cannot detect the language automatically.",
+      "suggestion": "Add a lang attribute to the root <html> element with the appropriate BCP 47 language tag.",
+      "example_before": "<html>",
+      "example_after": "<html lang=\"en\">",
+      "auto_fixable": true,
+      "learn_more": "https://dequeuniversity.com/rules/axe/4.11/html-has-lang?application=axeAPI"
+    },
+    {
+      "rank": 3,
+      "violation_id": "landmark-one-main",
+      "impact": "moderate",
+      "wcag_criterion": "BEST-PRACTICE",
+      "affected_elements": 1,
+      "headline": "Page is missing a main landmark",
+      "user_impact": "Keyboard and screen reader users cannot skip to the main content. This is a common navigation barrier for users who visit many pages on your site.",
+      "suggestion": "Wrap the primary page content in a <main> element. Every page should have exactly one <main>.",
+      "example_before": "<html>",
+      "example_after": "<main>...</main>",
+      "auto_fixable": false,
+      "learn_more": "https://dequeuniversity.com/rules/axe/4.11/landmark-one-main?application=axeAPI"
+    },
+    {
+      "rank": 4,
+      "violation_id": "page-has-heading-one",
+      "impact": "moderate",
+      "wcag_criterion": "BEST-PRACTICE",
+      "affected_elements": 1,
+      "headline": "1 element ensure that the page, or at least one of its frames contains a level-one heading",
+      "user_impact": "This violation affects users relying on assistive technologies.",
+      "suggestion": "Fix this violation by addressing the failing elements. See https://dequeuniversity.com/rules/axe/4.11/page-has-heading-one?application=axeAPI for detailed guidance.",
+      "example_before": "<html>",
+      "example_after": "<!-- See guidance at https://dequeuniversity.com/rules/axe/4.11/page-has-heading-one?application=axeAPI -->",
+      "auto_fixable": false,
+      "learn_more": "https://dequeuniversity.com/rules/axe/4.11/page-has-heading-one?application=axeAPI"
+    }
+  ],
+  "quick_wins": [
+    {
+      "rank": 2,
+      "violation_id": "html-has-lang",
+      "impact": "serious",
+      "wcag_criterion": "WCAG 2A, WCAG 311",
+      "affected_elements": 1,
+      "headline": "Page is missing a language declaration",
+      "user_impact": "Screen readers cannot select the correct voice/pronunciation engine. Translation tools cannot detect the language automatically.",
+      "suggestion": "Add a lang attribute to the root <html> element with the appropriate BCP 47 language tag.",
+      "example_before": "<html>",
+      "example_after": "<html lang=\"en\">",
+      "auto_fixable": true,
+      "learn_more": "https://dequeuniversity.com/rules/axe/4.11/html-has-lang?application=axeAPI"
+    }
+  ],
+  "ai_summary": "Accessibility evaluation for file:///Users/aashirjaved/Coding/a11y-agent/examples/tayyaba-dev/before.html\nScore: 65/100 (Grade C) — WCAG compliance: Non-compliant\n\nFound 4 violations across 11 checks: 0 critical, 2 serious, 2 moderate, 0 minor.\n7 checks pass. 1 could not be fully evaluated automatically.\n\nQuick wins — 1 violation can be auto-patched using the remediate tool:\n  • html-has-lang (serious): Page is missing a language declaration — 1 element affected\n\nTop issues to fix (in priority order):\n  1. [SERIOUS] 3 links have no accessible name\n     WCAG: WCAG 2A, WCAG 244, WCAG 412\n     Fix: Every link must have a descriptive accessible name.\n     Example: <a href=\"/about\" aria-label=\"Learn more about us\"><img src=\"arrow.svg\" alt=\"\"></a>\n  2. [SERIOUS] Page is missing a language declaration\n     WCAG: WCAG 2A, WCAG 311\n     Fix: Add a lang attribute to the root <html> element with the appropriate BCP 47 language tag.\n     Example: <html lang=\"en\">\n  3. [MODERATE] Page is missing a main landmark\n     WCAG: BEST-PRACTICE\n     Fix: Wrap the primary page content in a <main> element.\n     Example: <main>...</main>\n  4. [MODERATE] 1 element ensure that the page, or at least one of its frames contains a level-one heading\n     WCAG: BEST-PRACTICE\n     Fix: Fix this violation by addressing the failing elements.\n\nTo auto-patch all fixable violations, call the remediate tool with mode='fix' and the source file path."
+}

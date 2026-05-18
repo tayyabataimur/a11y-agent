@@ -33,9 +33,12 @@ Out of scope:
 
 ## Operator responsibilities
 
-Loop11y fetches and renders arbitrary URLs via Playwright. If you expose the HTTP server publicly:
+Loop11y is **local-first**. The HTTP server binds to `127.0.0.1` by default, the CLI and stdio MCP transport run as the operator. See `docs/THREAT-MODEL.md` for the full model.
 
-- Run behind authentication or in a private network
-- Restrict outbound network access from the host (block link-local, RFC1918, metadata endpoints)
-- Set resource limits on the container (CPU, memory, max audit duration)
+If you bind the HTTP server to a routable interface (`LOOP11Y_HOST=0.0.0.0` or any non-loopback address):
+
+- Set `LOOP11Y_AUTH_TOKEN=<secret>` — required for all `/api/*` routes
+- Restrict outbound network from the host (block link-local, RFC1918, metadata endpoints) to limit SSRF via `/api/evaluate`, `/api/crawl`, `/api/remediate`
+- Restrict filesystem permissions — `/api/repo-audit` and `/api/remediate` read and write paths the process can access
+- Set resource limits (CPU, memory, audit duration)
 - Do not run with elevated filesystem permissions outside the workspace it audits

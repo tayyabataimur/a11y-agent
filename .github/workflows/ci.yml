@@ -33,4 +33,50 @@ jobs:
         run: npm run build
 
       - name: Verify CLI entry
-        run: node dist/index.js --help || true
+        run: node dist/index.js --help
+
+  live-audit:
+    # Real end-to-end audit against tayyaba.dev. Network-dependent; the script
+    # skips (exit 0) when the target is unreachable. Set LIVE_AUDIT_REQUIRED=1
+    # to convert skip into failure once we are confident in target stability.
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Node 20
+        uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: npm
+
+      - name: Install dependencies
+        run: npm ci --ignore-scripts
+        env:
+          PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD: "1"
+
+      - name: Build
+        run: npm run build
+
+      - name: Install Playwright Chromium
+        run: npx playwright install chromium --with-deps
+
+      - name: Live audit (tayyaba.dev)
+        env:
+          LIVE_AUDIT_URL: https://tayyaba.dev
+        run: npm run test:live
+
+  action-smoke:
+    # Exercise action/action.yml against the checked-out ref. Catches
+    # action.yml regressions in PRs.
+    runs-on: ubuntu-latest
+    needs: build
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Run loop11y action (URL mode)
+        uses: ./action
+        with:
+          url: https://tayyaba.dev
+          comment-on-pr: "false"
+          fail-under: "0"

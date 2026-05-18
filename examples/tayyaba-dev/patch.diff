@@ -1,0 +1,26 @@
+--- examples/tayyaba-dev/before.html	2026-05-18 11:16:30
++++ examples/tayyaba-dev/after.html	2026-05-18 11:17:08
+@@ -1,5 +1,5 @@
+ <!doctype html>
+-<html>
++<html lang="en">
+ <head>
+   <meta charset="utf-8" />
+   <title>Tayyaba Taimur — Footer snippet</title>
+@@ -7,13 +7,13 @@
+ <body>
+   <footer>
+     <div class="social">
+-      <a href="https://github.com/tayyabataimur" target="_blank" rel="noopener noreferrer" class="p-1.5">
++      <a href="https://github.com/tayyabataimur" target="_blank" rel="noopener noreferrer" class="p-1.5" aria-label="Describe this link destination">
+         <svg width="20" height="20" aria-hidden="true"><circle cx="10" cy="10" r="8" /></svg>
+       </a>
+-      <a href="https://www.linkedin.com/in/tayyaba-taimur/" target="_blank" rel="noopener noreferrer" class="p-1.5">
++      <a href="https://www.linkedin.com/in/tayyaba-taimur/" target="_blank" rel="noopener noreferrer" class="p-1.5" aria-label="Describe this link destination">
+         <svg width="20" height="20" aria-hidden="true"><rect width="20" height="20" /></svg>
+       </a>
+-      <a href="mailto:tayyabataimur96@gmail.com" class="p-1.5">
++      <a href="mailto:tayyabataimur96@gmail.com" class="p-1.5" aria-label="Describe this link destination">
+         <svg width="20" height="20" aria-hidden="true"><path d="M0 0h20v20H0z" /></svg>
+       </a>
+     </div>

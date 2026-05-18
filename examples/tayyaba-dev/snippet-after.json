@@ -1,0 +1,50 @@
+{
+  "url": "file:///Users/aashirjaved/Coding/a11y-agent/examples/tayyaba-dev/after.html",
+  "timestamp": "2026-05-18T10:17:20.000Z",
+  "score": 89,
+  "grade": "B",
+  "wcag_level": "Partial A",
+  "summary": {
+    "total_checks": 17,
+    "passed": 15,
+    "violations": 2,
+    "critical": 0,
+    "serious": 0,
+    "moderate": 2,
+    "minor": 0,
+    "auto_fixable_count": 0,
+    "incomplete": 1
+  },
+  "top_issues": [
+    {
+      "rank": 1,
+      "violation_id": "landmark-one-main",
+      "impact": "moderate",
+      "wcag_criterion": "BEST-PRACTICE",
+      "affected_elements": 1,
+      "headline": "Page is missing a main landmark",
+      "user_impact": "Keyboard and screen reader users cannot skip to the main content. This is a common navigation barrier for users who visit many pages on your site.",
+      "suggestion": "Wrap the primary page content in a <main> element. Every page should have exactly one <main>.",
+      "example_before": "<html lang=\"en\">",
+      "example_after": "<main>...</main>",
+      "auto_fixable": false,
+      "learn_more": "https://dequeuniversity.com/rules/axe/4.11/landmark-one-main?application=axeAPI"
+    },
+    {
+      "rank": 2,
+      "violation_id": "page-has-heading-one",
+      "impact": "moderate",
+      "wcag_criterion": "BEST-PRACTICE",
+      "affected_elements": 1,
+      "headline": "1 element ensure that the page, or at least one of its frames contains a level-one heading",
+      "user_impact": "This violation affects users relying on assistive technologies.",
+      "suggestion": "Fix this violation by addressing the failing elements. See https://dequeuniversity.com/rules/axe/4.11/page-has-heading-one?application=axeAPI for detailed guidance.",
+      "example_before": "<html lang=\"en\">",
+      "example_after": "<!-- See guidance at https://dequeuniversity.com/rules/axe/4.11/page-has-heading-one?application=axeAPI -->",
+      "auto_fixable": false,
+      "learn_more": "https://dequeuniversity.com/rules/axe/4.11/page-has-heading-one?application=axeAPI"
+    }
+  ],
+  "quick_wins": [],
+  "ai_summary": "Accessibility evaluation for file:///Users/aashirjaved/Coding/a11y-agent/examples/tayyaba-dev/after.html\nScore: 89/100 (Grade B) — WCAG compliance: Partial A\n\nFound 2 violations across 17 checks: 0 critical, 0 serious, 2 moderate, 0 minor.\n15 checks pass. 1 could not be fully evaluated automatically.\n\nTop issues to fix (in priority order):\n  1. [MODERATE] Page is missing a main landmark\n     WCAG: BEST-PRACTICE\n     Fix: Wrap the primary page content in a <main> element.\n     Example: <main>...</main>\n  2. [MODERATE] 1 element ensure that the page, or at least one of its frames contains a level-one heading\n     WCAG: BEST-PRACTICE\n     Fix: Fix this violation by addressing the failing elements.\n\nTo auto-patch all fixable violations, call the remediate tool with mode='fix' and the source file path."
+}

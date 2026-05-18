@@ -1,7 +1,7 @@
 import { z } from "zod";
 import { readFileSync, writeFileSync } from "fs";
 import { runAxeAudit, type Violation } from "../lib/axe-runner.js";
-import { patchAll, AUTO_FIXABLE, PATCH_REGISTRY, getAutofixMeta, type AutofixMeta } from "../lib/patcher.js";
+import { patchAll, AUTO_FIXABLE, GUIDED_FIXABLE, PATCH_REGISTRY, getAutofixMeta, type AutofixMeta } from "../lib/patcher.js";
 import { verifyPatchedSource, type VerifyResult } from "../core/verify-service.js";
 import { authConfigSchema } from "../core/auth.js";
 
@@ -53,6 +53,13 @@ export const remediateSchema = z.object({
     .default(true)
     .describe(
       "When true, rerun verification after patching when supported. HTML files can be verified inline in diff or fix mode; rendered framework routes can be re-audited in fix mode."
+    ),
+
+  apply_drafts: z
+    .boolean()
+    .default(false)
+    .describe(
+      "Opt-in to apply guided-fix (draft) strategies such as placeholder aria-labels or empty alt insertion. These satisfy automated checks but require human review to avoid automated-pass/manual-fail outcomes. When false (default) draft fixes appear in needs_manual with the suggested patch text, but are not applied."
     ),
   auth: authConfigSchema.optional(),
 });
@@ -173,7 +180,10 @@ export async function remediate(input: RemediateInput): Promise<RemediateResult>
       continue;
     }
 
-    if (AUTO_FIXABLE.has(v.id) && v.id in PATCH_REGISTRY) {
+    const isSafe = AUTO_FIXABLE.has(v.id) && v.id in PATCH_REGISTRY;
+    const isDraft = GUIDED_FIXABLE.has(v.id) && v.id in PATCH_REGISTRY;
+
+    if (isSafe || (isDraft && input.apply_drafts)) {
       toFix.push(v.id);
     } else {
       manualViolations.push({
@@ -181,8 +191,8 @@ export async function remediate(input: RemediateInput): Promise<RemediateResult>
         impact: v.impact,
         description: v.description,
         wcag: v.wcag,
-        reason: meta?.safety === "guided-fix"
-          ? "This issue has guidance support but still requires human review and product-specific edits."
+        reason: isDraft
+          ? "Draft autofix available (e.g. placeholder aria-label or empty alt). Pass apply_drafts=true to apply it, but you must review and replace the placeholder before merging."
           : "No automatic patch available for this violation type. Manual remediation required.",
         nodes: v.nodes,
         ...(meta ? { autofix: meta } : {}),
